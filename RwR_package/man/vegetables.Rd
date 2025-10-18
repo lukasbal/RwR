@@ -9,7 +9,7 @@ Sale of frozen vegetables for weeks with different advertising campaigns.
 }
 \usage{data("vegetables")}
 \format{
-  A data frame with 1066 observations on the following 7 variables.
+  A tibble with 1066 observations on the following 7 variables.
   \describe{
     \item{\code{sale}}{a numeric vector}
     \item{\code{normalSale}}{a numeric vector}
