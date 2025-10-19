@@ -18,9 +18,6 @@ data on competition and economic activity in spatial proximity of the company.
     \item{\code{equity}}{a numeric vector}
     \item{\code{profit}}{a numeric vector}
     \item{\code{assets}}{a numeric vector}
-    \item{\code{solidity_ratio}}{a numeric vector}
-    \item{\code{liquidity_ratio}}{a numeric vector}
-    \item{\code{gearing}}{a numeric vector}
     \item{\code{return_on_assets}}{a numeric vector}
     \item{\code{CVR}}{a character vector}
     \item{\code{start}}{a Date}
