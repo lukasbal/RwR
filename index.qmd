@@ -1,10 +1,9 @@
 # Preface {.unnumbered}
 
-::: {.callout-important}
-The book is undergoing conversion from an older version and format.
-It is currently incomplete and subject to change without notice.
+::: {.callout-warning}
+The book is undergoing revision and some chapters are subject to change without notice.
 
-The state of individual chapters is marked at the top of the chapter.
+If an individual chapter is still under revision this is marked at the top of the chapter. 
 :::
 
 This book was written as the textbook material for a graduate statistics course
@@ -30,9 +29,8 @@ plotting data to data analysis, data modeling and model diagnostics.
 The book source is available from the [RwR GitHub repository](https://github.com/nielsrhansen/RwR)
 and it is accompanied by the [R package RwR](https://github.com/nielsrhansen/RwR/tree/main/RwR_package) containing datasets used in the book.
 
-::: {.callout-important}
-The book is undergoing conversion from an older version and format.
-It is currently incomplete and subject to change without notice.
+::: {.callout-warning}
+The book is undergoing revision and some chapters are subject to change without notice.
 
-The state of individual chapters is marked at the top of the chapter.
+If an individual chapter is still under revision this is marked at the top of the chapter. 
 :::

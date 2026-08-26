@@ -1,0 +1,66 @@
+% tex/pdf-header.tex
+\usepackage{float}
+\floatstyle{plain}
+\newfloat{assumption}{htbp}{loa}[chapter]
+\floatname{assumption}{Assumption}
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\usepackage{tikz}
+\usetikzlibrary{matrix,arrows.meta,positioning}
+
+% Smaller font for code chunks and their printed output.
+\usepackage{etoolbox}
+\fvset{fontsize=\footnotesize}
+
+% Widen code chunks into the margin-note area (non-floating, unlike
+% quarto's column: page). Not applied to plain-text chunk output
+% (base `verbatim`), which breaks when nested inside list-based
+% environments like adjustwidth.
+\makeatletter
+\newcommand{\rwrwidebegin}{\begin{adjustwidth}{}{-\@sidenotes@extrawidth}}
+\newcommand{\rwrwideend}{\end{adjustwidth}}
+\makeatother
+
+% Deferred to \AtBeginDocument: quarto's own code-block-bg option makes
+% it emit a *second* \renewenvironment{Shaded} later in the preamble
+% (switching the box implementation from framed's snugshade to
+% tcolorbox), which would silently clobber a \renewenvironment done
+% here directly. Waiting until \begin{document} guarantees the whole
+% preamble -- including quarto's redefinition -- has already run, so
+% we just wrap whatever Shaded currently is instead of replacing it.
+\AtBeginDocument{%
+  \let\rwrOldShaded\Shaded
+  \let\rwrEndOldShaded\endShaded
+  \renewenvironment{Shaded}{\rwrwidebegin\rwrOldShaded}{\rwrEndOldShaded\rwrwideend}%
+}
+
+\AtBeginEnvironment{verbatim}{\footnotesize}
+
+% KOMA's `footnotesize` ENVIRONMENT (\begin{footnotesize}...\end{footnotesize},
+% used by quarto for {.aside} spans via \marginnote{\begin{footnotesize}...})
+% sets a visibly larger \baselineskip than the plain \footnotesize
+% DECLARATION does (confirmed empirically: ~28px vs ~22px between
+% baselines at 150dpi in this document, i.e. about 27% more interline
+% space), even though both select the same font size. \sidenote uses
+% the declaration form and is unaffected.
+%
+% Fix by reproducing the declaration's own font-setting call directly,
+% using KOMA's exact metrics for this document's (11pt, the KOMA
+% default) base size -- see scrsize11pt.clo: \@setfontsize sets the
+% font and \baselineskip together and takes \footnotesize only as an
+% opaque token for its internal \@currsize bookkeeping (via \ifx), so
+% it never expands or calls \footnotesize. NOTE: an earlier attempt
+% here used `\renewenvironment{footnotesize}{\footnotesize}{\par}`,
+% which hung lualatex indefinitely -- because \newenvironment stores
+% an environment's begin-code under the environment's own name, i.e.
+% under \footnotesize itself, so that redefinition made \footnotesize
+% call \footnotesize, infinitely.
+\makeatletter
+\AtBeginDocument{%
+  \renewenvironment{footnotesize}{\@setfontsize\footnotesize\@ixpt{11}}{\par}%
+}
+\makeatother

@@ -1,4 +1,6 @@
+::: {.content-visible when-format="html"}
 $$
     \DeclareMathOperator*{\argmin}{arg\,min}
     \DeclareMathOperator*{\argmax}{arg\,max}
 $$
+:::

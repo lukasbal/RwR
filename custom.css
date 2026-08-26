@@ -1,0 +1,47 @@
+/* Quarto nests part of a proof/example in an extra div.page-columns
+   wrapper whenever a margin note occurs partway through, not just at
+   the very end. So the true last paragraph can be nested at any depth
+   rather than a direct child. p:last-of-type finds the last paragraph
+   at each nesting level; the :not(:has(...)) exclusion drops any such
+   paragraph that is followed by a later chunk (a .page-columns sibling
+   containing a paragraph of its own), leaving only the paragraph that
+   is actually last in document order. */
+
+/* Markers are drawn with a CSS border rather than a Unicode glyph
+   (e.g. U+25FB) because outlined geometric characters render as a
+   blurry filled-in gray blob at text size in most fonts. */
+
+/* Extra space after the whole block, so the following paragraph reads
+   as clearly separated from the end-of-proof/example marker. */
+div.proof,
+div.theorem.example {
+  margin-bottom: 1.2em;
+}
+
+/* End-of-proof marker (QED), matching the square automatically added
+   by the LaTeX proof environment in the PDF output. */
+div.proof p:last-of-type:not(:has(~ .page-columns p))::after {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  border: 0.07em solid currentColor;
+  float: right;
+  position: relative;
+  top: 0.15em;
+  margin-left: 0.4em;
+  margin-right: 0.5em;
+}
+
+/* End-of-example marker, distinct from the proof QED square. */
+div.theorem.example p:last-of-type:not(:has(~ .page-columns p))::after {
+  content: "";
+  width: 0.55em;
+  height: 0.55em;
+  border: 0.07em solid currentColor;
+  transform: rotate(45deg);
+  float: right;
+  position: relative;
+  top: 0.15em;
+  margin-left: 0.4em;
+  margin-right: 0.55em;
+}

@@ -1,8 +1,15 @@
-/RwR_0.3.tar.gz
+/RwR_*.tar.gz
 /_book
+/_book_pdf
+/_book_html
 /_publish.yml
 /.quarto
 /.quarto/
 /*_cache
 /*_files
 .DS_Store
+
+**/*.quarto_ipynb
+revision_plan.html
+revision_plan.md
+Tue Tjurs notat 1979.pdf

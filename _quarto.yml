@@ -1,10 +1,13 @@
 project:
   type: book
+  post-render:
+    - scripts/copy_output.sh
+#    - scripts/split_chapters.R
 
 book:
   title: "Regression with R"
   author: "Niels Richard Hansen"
-  date: "8/25/2025"
+  date: "8/25/2026"
   site-url: "https://rwr.nrhstat.org"
   repo-url: "https://github.com/nielsrhansen/RwR"
   
@@ -13,9 +16,16 @@ book:
     - 1_introduction.qmd
     - 2_linear.qmd
     - 3_birth.qmd
-    - 4_regression.qmd
-    - 5_exponential.qmd
-    - 6_generalized_linear.qmd
+    - 4_exponential.qmd
+    - 5_generalized_linear.qmd
+    - 6_existence_uniqueness.qmd
+    - 7_regression.qmd
+    - 8_assessment.qmd
+    - 9_small.qmd
+    - 10_advertising.qmd
+    - 11_survival.qmd
+    - 12_default.qmd
+    - 13_interval.qmd
     - references.qmd
   
 reference-location: margin
@@ -27,8 +37,22 @@ format:
     theme:
       - cosmo
       - brand
-    code-block-bg: "#FCFCFC"
+    css: custom.css
+    code-block-bg: "#F9F9F9"
     code-fold: true
+  pdf:
+    papersize: a4
+    code-block-bg: "#F9F9F9"
+    include-in-header:
+      - pdf-header.tex
+
+crossref:
+  custom:
+    - kind: float
+      reference-prefix: Assumption
+      key: ass
+      latex-env: assumption
+      caption-location: bottom
 
 execute:
   cache: true
