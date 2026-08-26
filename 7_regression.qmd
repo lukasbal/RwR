@@ -1,0 +1,1571 @@
+::: {.hidden}
+{{< include _macros.qmd >}}
+:::
+
+```{r}
+#| echo: false
+#| cache: false
+source("_common.R")
+```
+
+
+# Regression modeling {#sec-regression-modeling}
+
+::: {.callout-important}
+This chapter is currently undergoing conversion and substantial changes 
+will be made without notice. For the sections on practical data analysis 
+we refer, for the time being, to the 2020-edition.
+:::
+
+This chapter deals with a range of general problems and questions related to 
+regression modeling and the practical process of data analysis. Some of the general 
+considerations apply to statistics and data analysis in a broad sense, but to keep focus, 
+data analysis is treated in the framework of regression models only. 
+
+In the first part of the chapter we position the linear model from 
+@sec-linear within a more general framework. This makes it possible to 
+formulate some of the central objectives in regression analysis without 
+relying on specific model assumptions. 
+
+In the subsequent parts we turn to the process of practical data analysis, 
+which involves a lot of decision making. For an 
+inexperienced data analyst the decision making can be a daunting task, first of all 
+because there is never a set of clearly correct decisions.  Instead it appears 
+as if many decisions have to be made on the basis of little knowledge, and whenever 
+a decision is made, it may be open to criticism. It is therefore tempting to 
+hide the decision process, but this can be detrimental to the scientific 
+process.  
+
+We will develop methods for understanding and controlling the decision making 
+process involved in practical data analysis. This ranges from grand decisions, 
+like what the overall purpose of the analysis is, to technical decisions, 
+such as how to handle missing values. Central to the decision process is a 
+a solid understanding of how we can interpret an associational regression 
+model and what it can ultimately be used for. For this reason we will also 
+briefly treat some central *causal* questions and how and when we can use 
+regression models to answer them.
+
+The chapter concludes in @sec-nonlinear-expansions by introducing basis expansion 
+techniques to capture nonlinear relations within the framework of the linear model.
+The techniques are illustrated by a spline basis expansion of the relation 
+between claim size and insurance sum in the fire insurance example.   
+
+## Outline and prerequisites
+
+
+The chapter primarily relies on the following four R packages. 
+
+```{r}
+#| label: setup
+#| cache: false
+#| code-fold: false
+library(RwR)
+library(ggplot2)
+library(tibble)
+library(broom)
+library(splines)
+library(dplyr)
+```
+
+
+## General regression models
+
+There exists a range of generalizations of the linear regression model. It would be 
+misleading to lump them all together under the umbrella term *non*linear regression. 
+Some generalizations focus specifically on nonlinear relations between the response and 
+the predictors, while other generalizations focus on other targets than the conditional 
+expectation, e.g., the median or certain quantiles. 
+
+We will consider various generalizations in this book. In 
+@sec-generalized-linear the target is still 
+the conditional expectation -- with a particular form of nonlinearity. But just as importantly, 
+the chapter generalizes both the estimation methodology and the statistical theory to account 
+for variance heterogeneity. 
+
+In @sec-survival the target is the conditional hazard function of a 
+survival distribution. One particular class of such survival regression models are
+models of the conditional expectation of the *log-survival time*, but most models are not 
+directly targeting a conditional expectation.  
+
+In this chapter we treat some general aspects of regression modeling
+without making any of the linear modeling assumptions A1, A2 or A3, but 
+for clarity, the modeling target will remain the conditional expectation throughout.
+
+::: {#def-regression-function}
+Let $X \in \mathbb{R}^p$ and $Y \in \mathbb{R}$ be random variables and suppose that $\mathbf{E}(|Y|) < \infty$. 
+The regression function $m : \mathbb{R}^p \to \mathbb{R}$ is defined by 
+$$
+    m(x) = \mathbf{E}(Y \mid X = x)
+$$ {#eq-regression-fct}
+:::
+
+The regression function $m$ is in general only uniquely defined almost surely w.r.t. to the 
+distribution of $X$. Though if it has a continuous version, that version is unique on 
+the support of $X$. In most applications it is reasonable to assume that $m$ is continuous.
+
+A general regression model is a set $\mathcal{M}$ of regression functions. That is, 
+$$
+    \mathcal{M} \subseteq \{ m \mid m : \mathbb{R}^p \to \mathbb{R} \}.
+$$
+We see that the linearity assumption A1 can be expressed in terms of the regression function as 
+$$
+    m(x) = x^T \beta,
+$$
+which means that the corresponding linear regression model can be expressed as 
+$$
+    \mathcal{M}_{\mathrm{linear}} = \{ x \mapsto x^T \beta \mid \beta \in \mathbb{R}^p \}.
+$$
+The linear regression model is parametrized by the parameter $\beta$ belonging to the parameter set $\mathbb{R}^p$. 
+
+Most regression models are parametrized by a parameter, abstractly denoted $\theta \in \Theta$, 
+and we then write the model as 
+$$
+    \mathcal{M} = \{m_\theta \mid \theta \in \Theta \}.
+$$
+
+::: {#exm-logistic-curve}
+
+## Dose-response curves
+
+A simple classical example is the *logistic function* for $p = 1$: 
+$$
+    m_{(a,b,c)}(x) = \frac{\beta}{1 + e^{-(b x + a)}} + \alpha
+$$ {#eq-logistic-curve}
+The parameter $\theta = (a, b, \alpha, \beta)$ is $4$-dimensional and the parameter set is 
+$\Theta = \mathbb{R}^4$. 
+The S-shaped graph of a logistic function can, for instance, model the relation
+between a dosage ($x$) and a continuous response ($y$). 
+:::
+
+::: {#exm-neural-network}
+
+## Neural networks
+
+Let 
+$$
+    \mu, h: \mathbb{R} \to \mathbb{R}
+$$ 
+be two fixed (nonlinear) functions. 
+With $\mathbf{B}$ a real $p \times q$ matrix, $\beta \in \mathbb{R}^{q}$ and $\alpha \in \mathbb{R}$
+we define the regression function
+$$
+    m_{\mathbf{B}, \alpha, \beta} (x) = \mu(\alpha + h(x^T \mathbf{B}) \beta)
+$$
+parametrized by $(\mathbf{B}, \alpha, \beta)$. The convention above is that $h$ is 
+applied coordinatewisely to the $q$-dimensional (row)-vector $x^T \mathbf{B}$.
+
+[The functions $h$ and $\mu$ are known as *activation functions* 
+in the literature on neural networks.]{.aside}
+This is an example of a neural network with a single hidden layer. The 
+matrix $\mathbf{B}$ parametrizes the *input layer* mapping the predictor 
+vector $x \in \mathbb{R}^p$ to $h(x^T \mathbf{B}) \in \mathbb{R}^{q}$. It is 
+a composition of the parametrized linear map $x \mapsto x^T \mathbf{B}$ and a fixed coordinatewise 
+nonlinear function $h$. The number $\alpha$ and the vector $\beta$ parametrize the *output layer*, which is 
+likewise a composition of a linear map and the nonlinear function $\mu$. 
+
+We introduce the notation $L_{\alpha, \mathbf{B}}^{h} (x) = h(\alpha + x^T \mathbf{B})$ for an activation
+function $h$, a $p \times q$ matrix $\mathbf{B}$ and a vector $\alpha \in \mathbb{R}^q$. 
+Then $L_{\alpha, \mathbf{B}}^h : \mathbb{R}^p \to \mathbb{R}^q$ 
+and it represents a single layer in a neural network. Using this notation we 
+can write the neural network regression function above as a composition of two such maps:
+$$
+    m_{\mathbf{B}, \alpha, \beta} = L_{\alpha, \beta}^\mu \circ L_{0, \mathbf{B}}^{h}
+$$
+
+A general neural network with $k$ hidden layers can be defined as
+$$
+    \begin{align*}
+    m_{\alpha_1, \mathbf{B}_1, \ldots, \alpha_k, \mathbf{B}_k, \alpha, \beta}
+    %& = \mu(h_k( \cdots ( h_2(h_1(x^T \mathbf{B}_1)\mathbf{B}_2 + \beta_2) \cdots \mathbf{B}_k) + \beta_k)\beta + \beta_0) \\
+    & =  L_{\alpha, \beta}^\mu \circ L_{\alpha_k, \mathbf{B}_k}^{h_k} \circ  \ldots \circ L_{\alpha_1, \mathbf{B}_1}^{h_1} 
+    \end{align*}
+$$
+The model is parametrized by $(\alpha_1, \mathbf{B}_1, \ldots, \alpha_k, \mathbf{B}_k, \alpha, \beta)$ where 
+$\mathbf{B}_{j}$ is a $p_{j-1} \times p_j$ real matrix ($p_0 = p$),
+$\alpha_j \in \mathbb{R}^{p_j}$, $\beta \in \mathbb{R}^{p_k}$ and $\alpha \in \mathbb{R}$. 
+
+It is quite common to use the same activation function for all layers, 
+that is, $h_1 = h_2 = \ldots = h_k = \mu$. A couple of standard choices are:
+$$
+    \begin{align*}
+    \mu(\eta) & = (1 + e^{-\eta})^{-1} \qquad \mathrm{(logistic)} \\
+    \mu(\eta) & = \log(1 + e^\eta) \qquad \ \mathrm{(softplus)} \\
+    \mu(\eta) & = \max(0, \eta) \qquad \ \ \ \mathrm{(ReLU)}
+    \end{align*}
+$$
+[The $4$-parameter dose-response model above is an example of a neural 
+network with $p = q = 1$ and activation function being the logistic
+function.]{.aside}
+
+We will in @sec-generalized-linear treat *generalized linear models*, 
+which can be regarded as neural networks with no hidden layers. That is, 
+the regression function is of the form
+$$
+    m_\beta(x) = \mu(x^T \beta)
+$$
+We will in that context see canonical choices of the activation function $\mu$ 
+dictated by the distribution of the response variable. 
+:::
+
+Even though the parameter space of a neural network can be very large -- in 
+particular for deep neural networks with many hidden layers -- the parameter 
+space is formally a finite dimensional space. We might 
+want to choose a model $\mathcal{M}$ that is even larger, e.g., the set of all continuous functions, 
+the set of all Lipschitz functions, or the set of all smooth functions. These sets 
+cannot be parametrized in a nice way by a finite dimensional parameter[^parametric], 
+and we call the corresponding regression models *nonparametric*. 
+
+[^parametric]: More precisely, they are not finite dimensional differentiable 
+manifolds.
+
+There are substantial theoretical differences between trying to estimate a 
+regression function in a parametric model or in a nonparametric model. 
+From a practical perspective, though, the transition 
+from small parametric models to nonparametric models via large parametric 
+models is much more gradual. We will 
+not deal with estimation methods or theory that are explicitly nonparametric, but 
+it can be conceptually advantageous to define and discuss the 
+purposes and objectives of a regression analysis in a nonparametric way. 
+Doing so, we will be able to define our aims clearly without reference to a 
+particular parametric model -- even though we eventually, in this book, 
+develop solutions in terms of specific parametric models. 
+ 
+### Estimation methodologies
+
+The most widely used estimator of the regression function is the least squares 
+estimator minimizing the squared error loss. 
+With a model $\mathcal{M}$ and observations $(X_1, Y_1), \ldots, (X_n, Y_n)$ 
+it is formally defined as 
+$$
+    \hat{m} = \argmin_{m \in \mathcal{M}} \sum_{i=1}^n (Y_i - m(X_i))^2.
+$$ {#eq-nonlinear-least-squares}
+If the model is parametrized by $\theta \in \Theta$, we can formulate 
+the estimator in terms of estimating $\theta$
+$$
+    \hat{\theta} = \argmin_{\theta \in \Theta} \sum_{i=1}^n (Y_i - m_{\theta}(X_i))^2.
+$$ {#eq-nonlinear-least-squares-theta}
+
+::: {#exm-birth-weight-nn-fit}
+
+## Birth weight
+
+:::
+
+
+[For sufficiently flexible models $\mathcal{M}$, e.g., 
+models containing all degree $n$ polynomials, there is 
+a subset $\mathcal{M}_0 \subseteq \mathcal{M}$ such that 
+for all $m \in \mathcal{M}_0$, $m(X_i) = Y_i$ for all $i = 1, \ldots, n$. 
+All regression functions in $\mathcal{M}_0$ are said to *interpolate* 
+the data perfectly, and they all achieve the globally minimal squared error loss of $0$.]{.aside}
+There are several practical problems with these formal definitions, though. 
+First, there may be no global minimizer of the sum of squares or there may 
+be many. Second, it may be practically impossible to compute any such global 
+minimizer unless $\mathcal{M}$ is particularly nice, e.g.,
+$\mathcal{M} = \mathcal{M}_{\mathrm{linear}}$ as in @thm-normal. Third, 
+even if we could compute $\hat{m}$ it might not be a good estimator 
+if $\mathcal{M}$ is very large relative to the sample size $n$. 
+
+Many practical estimation algorithms do not attempt to litterally 
+compute $\hat{m}$ or $\hat{\theta}$ as defined by ([-@eq-nonlinear-least-squares])
+and ([-@eq-nonlinear-least-squares-theta]), respectively. Typically, 
+they iteratively find and improve candidate regression functions in the model
+-- using the squared error loss as guide rather than 
+trying to drive it to its minimal value. This can be done in many ways, 
+e.g., by explicitly restricting the model space to an $n$-dependent subset 
+$\mathcal{M}_n \subseteq \mathcal{M}$, or by regularizing the estimator 
+via a penalty function $\mathrm{pen} : \mathcal{M} \to \mathbb{R}$. 
+In the latter case, the algorithm would then (try to) compute   
+$$
+    \hat{m}^{\lambda_n} = \argmin_{m \in \mathcal{M}} \sum_{i=1}^n (Y_i - m(X_i))^2 + \lambda_n \mathrm{pen}(m)
+$$ {#eq-nonlinear-least-squares-pen}
+for an $n$-dependent parameter $\lambda_n > 0$ controlling the tradeoff 
+between the squared error loss and the penalty term. Typically, 
+$\lambda_n \to 0$ for $n \to \infty$ so that the regularization 
+has less and less impact on the estimator as the sample size increases.
+@sec-nonlinear-expansions demonstrated by example the use of penalization 
+within the framework of a linear model, where the penalization was used to 
+control the fluctuations of nonlinear interaction terms. 
+
+We can interpret the term $\lambda_n \mathrm{pen}(m)$ as an *inductive bias*, 
+where we bias the estimator toward small values of $\mathrm{pen}(m)$. Another 
+way to introduce an inductive bias is by *early stopping*. If we start the 
+optimization algorithm in a particular subset $\mathcal{M}_0$ and then 
+stop it before convergence, the result is implicitly biased toward models 
+in $\mathcal{M}_0$. An algorithm could implement early stopping by monitoring
+the squared error loss on an *independent dataset* and stop when that error 
+does not improve anymore. Similarly, the parameter $\lambda_n$ could be selected 
+by minimizing the squared error loss on an independent dataset over 
+a range of possible values of $\lambda_n$. 
+[We use *inductive bias* to mean a model assumption or algorithmic
+constraint that stear the estimator in a particular direction. 
+The concept is philosophically close to a Bayesian prior, and 
+Bayesian statistics offers a principled way to transform prior 
+beliefs to inductive biases. The folklore interpretation of 
+the *No Free Lunch theorem* is that we cannot estimate $m$ 
+to generalize beyond data without some inductive bias.]{.aside}
+
+For a notable part of this book we consider parametrized models and 
+loss functions that are nice enough for the estimators we consider 
+to actually be global minimizers, such as $\hat{\theta}$ in 
+([-@eq-nonlinear-least-squares-theta]). Moving beyond those models,
+regression function estimators used in practice are mostly the result of running 
+a complicated algorithm on data, which does not have a simple analytic 
+representation as, e.g., a minimizer or a solution to an equation. 
+This does not make such estimators bad, but it does make it somewhat 
+more complicated to understand their theoretical properties. The 
+least squares estimator in $\mathcal{M}_{\mathrm{linear}}$, as 
+treated in detail in @sec-linear, stands out as having a 
+particularly well understood theory, which we can leverage for 
+practical statistical data analysis. We cannot obtain a 
+similarly simple theory for general regression function estimators, but 
+we formulate our modeling objectives in terms of general regression 
+functions in clear and simple way that does not hinge 
+on simplistic model assumptions.  
+
+### Regression modeling objectives
+
+As discussed at some length in the introduction, @sec-introduction, one purpose of 
+estimating the regression function $m$ is to use $\hat{m}$ to make predictions 
+about $Y$ from observation of $X$. This is the primary focus in most of the machine learning 
+literature. Though we will cover this aspect in later chapters -- where we discuss 
+quantification and optimization of predictive strength of a model -- we also deal at length 
+with other objectives. 
+
+[In this section we focus for clarity on how $m$ depends on a single coordinate. 
+Similar questions can, of course, be formulated for any group of coordinates.]{.aside}
+One main question we consider is:
+
+**Does $m$ depend on $x_i$?**
+
+To formulate this precisely, let $x_{-j} = (x_1, \ldots, x_{j-1}, x_{j+1}, \ldots, x_p)^T$ denote 
+the $(p-1)$-dimensional vector with the $j$-th coordinate removed from $x$, and let
+$$
+    m_{-j}(x_{-j}) = \mathbf{E}(Y \mid X_{-j} = x_{-j})
+$$
+denote the regression function based on the $X_{-j}$-predictors only. We can then 
+formulate the hypothesis 
+$$
+    H_0: \mathbf{E}(Y \mid X) = m_{-j}(X_{-j}).
+$$ {#eq-fund-hyp}
+This hypothesis means that $m$ does not depend on the $i$-th coordinate,
+and it is an example of a conditional (mean) independence hypothesis.
+We will develop statistical theory to test $H_0$ based on various regression 
+modeling frameworks. 
+
+Another main objective we consider is to:
+
+**Quantify (and estimate) how much $m$ depends on a particular coordinate $x_i$.**
+
+Obviously, this objective is closely related to the hypothesis 
+above -- any sensible quantification should show that $m$ does not depend on $x_i$
+if $H_0$ is true. Additionally, such a quantification is naturally tied together
+with the development of a test statistic of $H_0$. Testing $H_0$ is, however, 
+a simpler problem, and the challenge is to develop easily interpretable 
+quantifications that are simultaneously easy to estimate. The regression modeling 
+frameworks we consider will have some natural ways of quantifying such 
+conditional associations.  
+
+To aid the general discussion of the two objectives above, we introduce 
+partial dependence functions and partial errors below. 
+To ease notation we will use the convention that
+$$
+    m(x_j, x_{-j}) = m((x_1, \ldots, x_{j-1}, x_j, x_{j+1}, \ldots, x_{p})^T),
+$$
+where $m(x_j, x_{-j})$ is simply a shorthand notation for the right hand side 
+above. Recall that $m(x) = \mathbf{E}(Y \mid X = x)$ denotes the joint regression function 
+of $Y$ on $X$.
+
+::: {#def-partial-dependence} 
+The partial dependence function $m_j : \mathbb{R} \to \mathbb{R}$ for the $j$-th coordinate is 
+$$
+    m_j(x_j) = \mathbf{E}(m(x_j, X_{-j})) = \mathbf{E}(\mathbf{E}(Y \mid  X_j = x_j, X_{-j})).
+$$ {#eq-partial-dependence}
+::: 
+
+The partial dependence function is also known as the adjusted regression function. 
+It is essential for its definition that we integrate out over the *marginal* 
+distribution of $X_{-j}$ and not the conditional distribution of $X_{-j}$ given 
+$X_{j} = x_j$.  
+
+
+Recall that $m_{-j}(x_{-j}) = \mathbf{E}(Y \mid X_{-j} = x_{-j})$ is the regression function 
+of $Y$ on $X_{-j}$ excluding the $j$-th coordinate of $X$.
+
+::: {#def-partial-error}
+The $j$-th partial error is defined as 
+$$
+    \varepsilon_{-j} = Y - m_{-j}(X_{-j}).
+$$ {#eq-partial-error}
+::: 
+
+Note that the tower property of conditional expectations imply the identity
+$$
+    m_{-j}(x_{-j}) = \mathbf{E}( m(X_j, x_{-j}) \mid X_{-j} = x_{-j}),
+$$
+which relate $m_{-j}$ to $m$. We can now show the following result on
+implications of the hypothesis $H_0$ for the partial dependence 
+function and the partial error. 
+
+::: {#prp-dependence} 
+If the regression function $m(x) = \mathbf{E}(Y \mid X = x)$ does not depend on $x_j$ then 
+
+1. The partial dependence function $m_{j}$ is constant.
+2. $m_{-j}(x_{-j}) = m(x_j, x_{-j})$ for any $x_j$.
+3. $\mathrm{cov}(\varepsilon_{-j}, X_j) = 0$.
+::: 
+
+::: {.proof}
+It follows directly from ([-@eq-partial-dependence]) that if $m$ does not depend on $x_j$ 
+then $m_{j}(x_j) = \mathbf{E}(m(X_{-j}))$ is constant. 
+
+To prove the second claim we note that if  $m$ does not depend on the $j$-th coordinate, 
+$m(X_j, x_{-j}) = m(x_j, x_{-j})$ for any fixed $x_j$, whence 
+$$
+    m_{-j}(x_{-j}) = \mathbf{E}( m(X_j, x_{-j}) \mid X_{-j} = x_{-j}) =  m(x_j, x_{-j}).
+$$
+
+Finally, if $m$ does not depend on $x_j$, $\varepsilon_{-j} = \varepsilon = Y - \mathbf{E}(Y \mid X)$. 
+Whence by the tower property of conditional expections, 
+$$
+    \begin{align*}
+    \mathrm{cov}(\varepsilon_{-j}, X_j) & = \mathrm{cov}(\varepsilon, X_j) \\
+    & = \mathbf{E}( \varepsilon X_j ) \\
+    & = \mathbf{E}( \mathbf{E}(\varepsilon X_j \mid X)) \\
+    & = \mathbf{E}( \mathbf{E}(\varepsilon \mid X) X_j) = 0,
+    \end{align*}
+$$
+where we have used that $\mathbf{E}(\varepsilon \mid X) = 0$. 
+::: 
+
+There are various procedures, motivated by @prp-dependence, 
+that are used in practice to better understand how $m$ depends on a 
+particular predictor. To describe them, let $\hat{m}$ and $\hat{m}_{-j}$ 
+denote estimates of $m$ and $m_{-j}$, respectively. 
+
+1. The *partial dependence plot* is simply a plot of $\hat{m}_j(X_{i,j})$ against $X_{i,j}$, where 
+    $$
+        \hat{m}_j(X_{i,j}) = \frac{1}{n} \sum_{i'=1}^n \hat{m}(X_{i,j}, X_{i', -j}).
+    $$
+    It is a direct graphical check of whether $m_j$ is constant.
+2.  For a $q$-dimensional model $\mathcal{M}$ of $m$ and a $q_0$ dimensional model $\mathcal{M}_{-j}$ of 
+    $m_{-j}$, the $F$-test statistic is 
+    $$
+        F = \frac{\sum_{i=1}^n (\hat{m}_{-j}(X_{i,-j}) - \hat{m}(X_{i}))^2(q - q_0)}{\sum_{i=1}(Y_i - \hat{m}(X_{i}))^2 / (n - q)}.
+    $$
+    It quantifies directly any differences between $m_{-j}$ and $m$. 
+3.  Defining the $j$-th *partial residuals* as 
+    $$
+        \hat{\varepsilon}_{i, -j} = Y_i - \hat{m}_{-j}(X_{-j}),
+    $$ 
+    we can plot $\hat{\varepsilon}_{i, -j}$ against $X_{i,j}$. 
+4.  Letting $\hat{r}_j$ denote an estimate of the regression function 
+    $$
+        r_j(x_{-j}) = \mathbf{E}(X_j \mid X_{-j} = x_{-j}),
+    $$ 
+    we can also plot the partial residuals $\hat{\varepsilon}_{i,-j}$ against $X_{i,j} - \hat{r}_j(X_{i,-j})$.
+    This plot is known as an *added variable plot*.
+
+The suggested plots of the partial residuals against either the $j$-th predictor 
+or its residual are both attempts to visualize dependencies between $\varepsilon_{-j}$ and $X_j$. 
+The plots can be used to graphically detect if $\mathrm{cov}(\varepsilon_{-j}, X_j) = 0$ or not. 
+We can also use the partial residuals to directly estimate the covariance, either as 
+$$
+    \tilde{\mathrm{cov}}_j = \frac{1}{n} \sum_{i=1}^n \hat{\varepsilon}_{i, -j} X_{i,j} 
+$$ {#eq-partial-cov-bad}
+or as 
+$$
+    \hat{\mathrm{cov}}_j = \frac{1}{n} \sum_{i=1}^n \hat{\varepsilon}_{i, -j} (X_{i,j} - \hat{r}(X_{i,-j})).
+$$ {#eq-partial-cov-good}
+
+Both of these covariance estimates quantify deviations from $H_0$, and in this way indirectly 
+also how much $m$ depends on the $j$-th coordinate. The estimator ([-@eq-partial-cov-bad]) 
+has the advantage that we do not need to estimate the regression function $r_j$, but it can
+be severely biased and $\hat{\mathrm{cov}}_j$ is preferred in practice. 
+
+To better appreciate the general definitions and procedures outlined above, we go through four 
+different examples in increasing complexity, where most of the definitions and quantities 
+above have some explicit expressions in terms of model parameters or components.
+
+::: {#exm-linear-model}
+If $m(x) = x^T \beta$ is linear we find that the partial dependence function is 
+$$
+    m_j(x_j) = \beta_j x_j + \mathbf{E}(X_{-j})^T \beta_{-j}.
+$$ 
+We see that the partial dependence function is affine with slope $\beta_j$. It 
+is constant if and only if $\beta_j = 0$, which is the case if and only if $m$ 
+does not depend on $x_j$. 
+
+The $F$-test statistic defined above coincides for this model with the $F$-test statistic 
+defined by @eq-F-test-statistic, and it can be used to formally test $H_0$. 
+
+We also find that 
+$$
+    m_{-j}(x_{-j}) = x_{-j}^T \beta_{-j} + \beta_j \mathbf{E}(X_j \mid X_{-j} = x_{-j}) 
+    = x_{-j}^T \beta_{-j} + \beta_j r_j(x_{-j}).
+$$
+Therefore 
+$$
+    m(x) - m_{-j}(x_{-j}) = \beta_j(x_j - r_j(x_{-j}))
+$$
+This difference is non-zero only if $\beta_j \neq 0$. Moreover, 
+$$
+    \varepsilon_{-j} = \varepsilon + \beta_j(X_j - r_j(X_{-j}))
+$$
+and we find that 
+$$
+    \mathrm{cov}(\varepsilon_{-j}, X_j) = \beta_j \mathbf{V}(X_j - r_j(X_{-j})).
+$$
+This covariance is thus proportional to $\beta_j$, with a proportionality 
+constant $\mathbf{V}(X_j - r_j(X_{-j}))$ depending on the distribution of $X$ only. 
+::: 
+
+::: {#exm-partially-linear-model}
+The regression function is called *partially linear* in the $j$-th variable if it 
+is of the form 
+$$
+    m(x) = \beta_j x_j + h_{-j}(x_{-j}).
+$$
+In this case, similarly as above, the partial dependence function is an affine function
+$$
+    m_j(x_j) = \beta_j x_j + \mathbf{E}(h_{-j}(X_{-j})) 
+$$
+with slope $\beta_j$. Moreover, 
+$$
+    m_{-j}(x_{-j}) = h_{-j}(x_{-j}) + \beta_j \mathbf{E}(X_j \mid X_{-j} = x_{-j}) 
+    = h_{-j}(x_{-j}) + \beta_j r_j(x_{-j}),
+$$
+and thus 
+$$
+    m(x) - m_{-j}(x_{-j}) = \beta_j(x_j - r_j(x_{-j}))
+$$
+exactly as if $m$ were linear. By the same argument as above, we get that 
+$$
+    \mathrm{cov}(\varepsilon_{-j}, X_j) = \beta_j \mathbf{V}(X_j - r_j(X_{-j})).
+$$
+::: 
+
+The computations above for a partially linear regression function reveal that 
+the partial dependence plot as well as procedures based on the partial residuals 
+should reveal the same affine dependence of $m$ on $x_j$ whether $m$ 
+is linear or only partially linear. The subtle, but important, 
+practical difference is that this is only true if the estimators used 
+for estimating the partial dependence function or for computing 
+the partial residuals are flexible enough to correctly model the 
+potentially nonlinear functions $h_{-j}$ and $m_{-j}$. 
+
+::: {#exm-partially-linear-het-model}
+If the regression function has the form
+$$
+    m(x) = \beta_j(x_{-j}) x_j + h_{-j}(x_{-j}),
+$$
+it is affine in $x_j$ for any fixed $x_{-j}$. It is
+partially linear in the $j$-th variable but with a coefficient 
+that depends on $x_{-j}$. The partial dependence function is 
+the affine function
+$$
+    m_j(x_j) = \mathbf{E}(\beta_j(X_{-j})) x_j + \mathbf{E}(h_{-j}(X_{-j})) 
+$$
+with slope $\mathbf{E}(\beta_j(X_{-j}))$ being the mean slope of $x_j$ in $m$. 
+$$
+    m_{-j}(x_{-j}) = h_{-j}(x_{-j}) + \beta_j(x_{-j}) \mathbf{E}(X_j \mid X_{-j} = x_{-j}) 
+    = h_{-j}(x_{-j}) + \beta_j(x_{-j}) r_j(x_{-j}),
+$$
+and thus 
+$$
+    m(x) - m_{-j}(x_{-j}) = \beta_j(x_{-j})(x_j - r_j(x_{-j})).
+$$
+The covariance becomes 
+$$
+    \begin{align*}
+    \mathrm{cov}(\varepsilon_{-j}, X_j) & = \mathbf{E}(\beta_j(X_{-j})(X_j - r_j(X_{-j}))^2) \\
+    & = \mathbf{E}(\beta_j(X_{-j})\mathbf{V}(X_j - r_j(X_{-j}) \mid X_{-j})) \\
+    & = \mathbf{E}(\beta_j(X_{-j})v_j(X_{-j})), \\
+    \end{align*}
+$$
+which we can interpret as a weighted mean of the individual slopes with weights 
+$v_j(X_{-j}) = \mathbf{V}(X_j - r_j(X_{-j}) \mid X_{-j})$ being conditional variances. 
+:::
+
+::: {#exm-partially-additive-model}
+The regression function is called *partially additive* in the $j$-th variable if 
+it is of the form 
+$$
+    m(x) = m^0_j(x_j) + h_{-j}(x_{-j}).
+$$
+The partial dependence function is then 
+$$
+    m_j(x_j) = m^0_j(x_j) + \mathbf{E}(h_{-j}(X_{-j})), 
+$$
+which up to an additive constant coincides with $m^0_j$. 
+The regression function $m_{-j}$ becomes 
+$$
+    m_{-j}(x_{-j}) = h_{-j}(x_{-j}) + \mathbf{E}(m^0(X_j) \mid X_{-j} = x_{-j}) 
+    = h_{-j}(x_{-j}) + w_{-j}(x_{-j})
+$$
+where $w_{-j}(x_{-j}) = \mathbf{E}(m^0_j(X_j) \mid X_{-j} = x_{-j})$. Therefore 
+$$
+    m(x) - m_{-j}(x_{-j}) = m^0_j(x_j) - w_{-j}(x_{-j}). 
+$$
+Finally
+$$
+    \begin{align*}
+        \mathrm{cov}(\varepsilon_{-j}, X_j) & =  \mathrm{cov}(m^0_j(X_j) - w_{-j}(X_{-j}), X_j) \\
+        & = \mathbf{E}( \mathrm{cov}(m^0_j(X_j), X_j \mid X_{-j})).
+    \end{align*}
+$$
+::: 
+
+## Nonlinear basis expansions
+
+
+### Nonlinear expansions for claims modeling {#sec-nonlinear-expansions}
+
+We found in the earlier analysis of the insurance claims data a lack of
+model fit. This could be due to a nonlinear relation between
+`log(claims)` and `log(sum)`. To handle nonlinear
+relations between the response and one or more predictors, the predictors
+(as well as the response) can be nonlinearly transformed before they enter
+into the linear model. Such pre-modeling transformations
+extend the scope of the linear model considerably. For the insurance data
+the original variables were already log-transformed, and
+it is not obvious which other transformation to use.
+
+
+```{r} 
+#| label: fig-poly
+#| fig-cap: "A basis of orthogonal polynomials."
+#| column: margin
+x <- seq(11, 21, 0.05)
+pol <- as_tibble(cbind(x, poly(x, degree = 5)))
+long_pol <- tidyr::pivot_longer(pol, cols = !x, names_to = "basis_fct")
+p <- ggplot(NULL, aes(x, value, colour = basis_fct)) +
+    scale_color_discrete(guide = "none") + xlab("") + ylab("")
+p + geom_line(data = long_pol, linewidth = 1)
+```
+
+
+An alternative to data transformations is to use a small but
+flexible class of *basis functions*, which
+can capture the nonlinearity. One possibility is to use low degree polynomials.
+This can be done by simply including powers of a predictor as additional
+predictors.
+[Due to the parsing of formulas in R,
+powers have to be wrapped into an `I()`}-call, e.g., `y ~ x + I(x2)`.]
+Depending on the scale and range of the predictor, this may
+work just fine. However, raw powers can result in numerical difficulties.
+An alternative is to use orthogonal polynomials, which are numerically more
+well behaved.
+\index{polynomials!orthogonal}
+
+@fig-poly shows an example of an orthogonal basis of
+degree 5 polynomials on the range 11--21. This corresponds approximately
+to the range of `log(sum)`, which is a target for basis
+expansion in the example. What should be noted in @fig-poly is
+that the behavior near the boundary is quite erratic. This is characteristic
+for polynomial bases. To achieve flexibility in the central part of the range,
+the polynomials become erratic close to the boundaries. Extrapolation
+beyond the boundaries cannot be trusted.
+
+\index{spline}
+An alternative to polynomials is splines. A spline[^splines]
+is piecewisely a polynomial, and the pieces are joined together in a sufficiently smooth
+way. The points where the polynomials are joined together are called
+*knots*. The flexibility of a spline is determined by the number
+and placement of the knots and the degree of the polynomials. A degree
+$k$ spline is required to be $k-1$ times continuously differentiable.
+A degree 3 spline, also known as a *cubic spline*, is a popular choice,
+which thus has a continuous (piecewise linear) second derivative.
+
+[^splines]:A spline is also a thin and flexible wood or metal strip used for smooth curve drawing.
+
+```{r}
+#| label: fig-b-spline
+#| fig-cap: "A basis of cubic $B$-splines computed using the `bs()` function with two internal knots at 14 and 18 in addition to two boundary knots at 11 and 21."
+#| column: margin
+b_spline <- as_tibble(cbind(x, splines::bs(x, knots = c(14, 18))))
+long_b_spline <- tidyr::pivot_longer(b_spline, cols = !x, names_to = "basis_fct")
+p + geom_line(data = long_b_spline, linewidth = 1) +
+    geom_rug(aes(x = c(11, 14, 18, 21), y = NULL, color = NULL), linewidth = 1)
+```
+
+\index{spline!cubic}
+@fig-b-spline shows a basis of 5 cubic spline functions.
+They are so-called $B$-splines \index{$B$-spline} (basis splines). Note that it is impossible
+to visually detect the knots where the second derivative is
+non-differentiable. The degree $k$ $B$-spline basis with $r$
+internal knots has $k + r$ basis functions. The constant function is not included
+then, and this is precisely what we want when the basis expansion is
+used in a regression model including an intercept. As seen in @fig-b-spline,
+the $B$-spline basis is also somewhat erratic close to the boundary. For a cubic
+spline, the  behavior close to the boundary can be controlled by requiring that the second and
+third derivatives are $0$ at the boundary knots. The result is known as a
+*natural cubic spline*. \index{natural cubic spline} The extrapolation (as a spline) of a
+natural cubic spline beyond the boundary knots is linear.
+
+Due to the restriction on the derivatives of a natural cubic spline,
+the basis with $r$ internal knots has $r + 1$ basis functions. Thus the basis for the
+natural cubic splines with $r + 2$ internal knots has the same number of
+basis functions as the raw cubic $B$-spline basis with $r$ internal knots. This means in
+practice that, compared to using raw $B$-splines with $r$ internal knots, we can add two
+internal knots, and thus increase the central flexibility of the model,
+while retaining its complexity in terms of $r + 3$ parameters.
+
+```{r}
+#| label: fig-n-spline
+#| fig-cap: "A $B$-spline basis for natural cubic splines computed using the `ns()` function with internal knots at 13, 15, 17 and 19 in addition to the two boundary knots at 11 and 21."
+#| column: margin
+n_spline <- as_tibble(cbind(x, splines::ns(x, knots = c(13, 15, 17, 19))))
+long_n_spline <- tidyr::pivot_longer(n_spline, cols = !x, names_to = "basis_fct")
+p + geom_line(data = long_n_spline, linewidth = 1) +
+    geom_rug(aes(x = c(11, 13, 15, 17, 19, 21), y = NULL, color = NULL), linewidth = 1)
+```
+
+It is possible to use orthogonal polynomial expansions as well as spline expansions
+in R together with the `lm()` function via the functions `poly()`,
+`bs()` and `ns()`. The latter two are
+in the splines package, which thus has to be loaded.
+
+We will illustrate the usage of basis expansions for claim size modeling using
+natural cubic splines. \index{spline expansion}
+
+```{r}
+#| label: claims-spline
+#| code-fold: show
+claims_lm_spline_add <- lm(
+  log(claims) ~ ns(log(sum), knots = c(13, 15, 17, 19)) + grp,
+  data = claims
+)
+claims_lm_spline_int <- lm(
+  log(claims) ~ ns(log(sum), knots = c(13, 15, 17, 19)) * grp,
+  data = claims
+)
+```
+
+When we fit a model using basis expansions the coefficients of individual
+basis functions are rarely interpretable or of interest. Thus reporting the
+summary including all the estimated coefficients is not particularly informative.
+Below we only extract the last lines from the summary to report the residual
+variance and the $R^2$ quantities.
+
+```{r, echo=2}
+#| label: tbl-claims-spline-sum1
+#| tbl-cap: "Summary statistics for the additive model based on a spline basis expansion."
+#| tbl-cap-location: bottom
+#| column: page-right
+options(digits = 5)
+glance(claims_lm_spline_add) |>
+    knitr::kable()
+options(digits = 7)
+```
+
+```{r, echo=2}
+#| label: tbl-claims-spline-sum2
+#| tbl-cap: "Summary statistics for the interaction model based on a spline basis expansion."
+#| tbl-cap-location: bottom
+#| column: page-right
+options(digits = 5)
+glance(claims_lm_spline_int) |>
+    knitr::kable()
+options(digits = 7)
+```
+
+Compared to the additive model without the basis expansion, $R^2$ (also the adjusted one)
+is increased a little by the basis expansion. A further increase is observed for the model
+that includes interactions as well as a basis expansion, and thus gives a unique nonlinear
+relation between insurance sum and claim size for each trade group. @fig-claims-diag-spline
+shows some diagnostic plots for the additive model, which show that the mean value model is
+now pretty good, while the residuals are still slightly right skewed. The lack of normality
+is not a problem for using the sampling distributions to draw inference. However, if we compute
+prediction intervals, say, then we must account for the skewness in the residual distribution.
+This can be done by using quantiles for the empirical distribution of the residuals instead of
+quantiles for the normal distribution.
+
+```{r}
+#| label: fig-claims-diag-spline
+#| message: false
+#| fig-cap: "Residual plot (left), histogram (middle) of the raw residuals and qq-plot (right) of the standardized residuals for the additive model with a basis expansion of log insurance sum."
+#| opts.label: widefigure3
+#| cap-location: margin
+claims_diag_spline <- augment(claims_lm_spline_add) ## Residuals etc.
+gridExtra::grid.arrange(
+  ggplot(claims_diag_spline, aes(.fitted, .resid), alpha = 0.2) + geom_point() + geom_smooth(),
+  ggplot(claims_diag_spline, aes(.resid)) + geom_histogram(bins = 40),
+  ggplot(claims_diag_spline, aes(sample = .std.resid)) + geom_qq() + geom_abline(),
+  ncol = 3
+)
+```
+
+Graphical comparisons are typically preferable over parameter comparisons when models involving nonlinear effects and basis expansions are compared. 
+
+```{r}
+#| label: fig-claims-scatter
+#| message: false
+#| code-fold: true
+p0 <- ggplot(
+        data = claims, 
+        aes(sum, claims), 
+        alpha = I(0.2)
+    ) + 
+    scale_x_log10(
+        "Insurance sum (DKK)", 
+        breaks = 10^c(6, 7, 8), 
+        labels = c("1M", "10M", "100M")
+        ) +
+    scale_y_log10(
+        "Claim size (DKK)", 
+        breaks = 10^c(2, 4, 6, 8), 
+        labels = c("100", "10K", "1M", "100M")
+    ) +
+    geom_point()
+```
+
+```{r}
+#| label: fig-spline-fit
+#| fig-cap: "Scatter plots and fitted values for the claim size models using natural cubic splines including 95% pointwise confidence bands. The additive model (blue) gives translations of the same nonlinear relation for all four trade groups wheras the interaction model (red) gives a separate nonlinear relation for all four trade groups."
+#| opts.label: widefigure4
+#| column: page
+pred_add <- cbind(
+    claims, 
+    exp(predict(claims_lm_spline_add, interval = "confidence"))
+)
+pred_int <- cbind(
+    claims, 
+    exp(predict(claims_lm_spline_int, interval = "confidence"))
+)
+p0 <- p0 + facet_wrap(~ grp, ncol = 4) + coord_cartesian(ylim = c(100, 1e6))
+p0 + geom_line(aes(y = fit), pred_add, color = "blue", linewidth = 2) +
+  geom_ribbon(aes(ymax = upr, ymin = lwr), pred_add, fill = "blue", alpha = 0.2) +
+  geom_line(aes(y = fit), pred_int, color = "red", linewidth = 2) +
+  geom_ribbon(aes(ymax = upr, ymin = lwr), pred_int, fill = "red", alpha = 0.2)
+```
+
+@fig-spline-fit shows the fitted models
+stratified according to trade group. The fitted values were computed using the `predict()`
+function in R, which can also give upper and lower confidence bounds on the fitted
+ values. The fitted value for the $i$-th observation is $X_i^T \hat{\beta}$. By 
+@thm-pardisnorm a confidence interval for the fitted value can be
+computed using @eq-confint with $a = X_i$. The
+confidence intervals reported by `predict()` for lm objects are computed
+using this formula, and these are the pointwise confidence bands shown in
+@fig-spline-fit. From this figure any gain of the interaction model
+over the additive model is questionable. The increase of $R^2$, say, appears to be mostly
+driven by spurious fluctuations. For trade group 4 the capped
+claims seem overly influential, and because trade group 3 has relatively few observations
+the nonlinear fit is poorly determined for this group.
+
+```{r}
+#| label: claims-lm-add
+#| code-fold: true
+claims_lm_add <- lm(
+    log(claims) ~ log(sum) + grp,
+    data = claims
+)
+```
+
+```{r}
+#| label: tbl-claims-spline-anova
+#| code-fold: show
+#| tbl-cap: "Analysis of variance table comparing the two models based on spline expansions and the additive linear model."
+#| tbl-cap-location: bottom
+anova(
+    claims_lm_add, 
+    claims_lm_spline_add, 
+    claims_lm_spline_int
+) |> knitr::kable()
+```
+
+In the final comparison above using $F$-tests
+we first test the hypothesis that the relation is linear in the additive model, and then we
+test the additive hypothesis when the nonlinear relation is included.
+The tests formally reject both hypotheses, but the
+graphical summary in @fig-spline-fit suggests that the nonlinear additive model
+is preferable anyway.
+
+Introducing a penalty can dampen the spurious fluctuations the arose from
+the nonlinear basis expansion. We conclude the analysis of the insurance data by 
+illustrating how the penalized least squares fit can be computed, and what effect 
+the penalty has on the least squares solution. First recall that the 
+least squares estimator could have been computed by solving the normal equation 
+directly. 
+
+```{r}
+#| label: LU
+#| code-fold: show
+X <- model.matrix(claims_lm_spline_int)
+y <- model.response(model.frame(claims_lm_spline_int))
+XtX <- crossprod(X)     # Faster than but equivalent to t(X) %*% X
+Xty <- crossprod(X, y)  # Faster than but equivalent to t(X) %*% y
+coef_hat <- solve(XtX, Xty)
+# Comparison
+range(coef_hat - coefficients(claims_lm_spline_int))
+```
+
+The result obtained by solving the normal equation directly is up to numerical errors 
+identical to the solution computed using `lm()`. The R function `solve()` calls 
+the Fortran routine DGESV from the LAPACK library 
+for solution of linear equations using LU decomposition with partial pivoting (Gaussian 
+elimination with row permutations). 
+
+Likewise, we can compute the penalized estimator by solving the corresponding linear 
+equation. We will do so where we only add a penalty on the coefficients corresponding to
+the interaction terms in the nonlinear basis expansion. We will use penalty matrices of 
+the form $\lambda \boldsymbol{\Omega}$ for a fixed matrix $\boldsymbol{\Omega}$ so 
+that the amount of penalization is controlled by the parameter $\lambda > 0$. 
+
+```{r}
+#| label: penalize
+#| code-fold: show
+Omega <- diag(c(rep(0, 9), rep(1, 15)))
+coef_hat <- cbind(
+    solve(XtX + 0.1 * Omega, Xty),  # Small penalty
+    solve(XtX + Omega, Xty),        # Medium penalty
+    solve(XtX + 10 * Omega, Xty)    # Large penalty
+)  
+```
+
+@fig-penalized shows the resulting penalized model compared to the 
+unpenalized interaction model ($\lambda = 0$) and the additive model ($\lambda = \infty$). 
+A minimal penalization is enough to
+dampen the most pronounced spurious fluctuation for the fourth trade group 
+considerably. 
+
+```{r}
+#| label: fig-penalized
+#| fig-cap: "Scatter plots and fitted values for the claim size models where the nonlinear interaction terms have been penalized. The unpenalized interaction and additive model fits are also added."
+#| opts.label: widefigure4
+#| column: page
+tmp <- cbind(
+    coefficients(claims_lm_spline_int),
+    coef_hat, 
+    c(coefficients(claims_lm_spline_add), rep(0, 15))
+)
+pred <- cbind(claims[, c("sum", "grp")], exp(X %*% tmp)) 
+pred <- tidyr::pivot_longer(pred, cols = !c(grp, sum), names_to = "lambda")                                 
+p0 + geom_line(
+  aes(y = value, color = lambda), 
+  data = pred, 
+  linewidth = 1) +
+  theme(legend.position = "top") + 
+  scale_color_discrete(
+    expression(~lambda), 
+    labels = c(0, 0.1, 1, 10, expression(infinity~~~(additive~model)))
+  )     
+```
+
+The penalized least squares estimates can also be computed using the QR decomposition via
+the function `lm.fit()`. To achieve this we need to augment the model matrix and the 
+response data suitably. 
+
+```{r}
+#| label: fit-lamb
+#| code-fold: show
+fit_lamb1 <- lm.fit(rbind(X, sqrt(0.1) * Omega), c(y, rep(0, ncol(Omega))))
+fit_lamb2 <- lm.fit(rbind(X, sqrt(10) * Omega),  c(y, rep(0, ncol(Omega))))
+## Comparisons
+range(coef_hat[, 1] - coefficients(fit_lamb1))  
+range(coef_hat[, 3] - coefficients(fit_lamb2))  
+```
+
+The results are again (numerically) identical to using `solve()` above. 
+If several penalized estimates using matrices $\lambda \boldsymbol{\Omega}$ for different choices 
+of $\lambda$ are to be computed, a third option using a diagonalization of $\mathbf{X}^T \mathbf{X}$ is beneficial. 
+This is implemented in, e.g., the `lm.ridge()` function in the package MASS, which unfortunately 
+doesn't let you choose your own penalty matrix -- it only implements $\boldsymbol{\Omega} = \mathbf{I}$.
+
+In conclusion, we have found evidence in the data for an overall nonlinear
+relation between insurance sum and claim size plus an additive effect of trade group. For small insurance sums (less than DKK 1M) there is almost no relation, while for larger insurance
+sums there is roughly a linear relation on a log-log scale. The model fits the data
+well with a non-normal and slightly right skewed residual distribution, but as a
+predictive model it is weak, and insurance sum can together with
+trade group only explain 6-7\% of the variation in the (log) claim size distribution.
+
+
+### Nonlinear birth weight models  {#sec-nonlinear-birth}
+
+Basis expansions can be tried if we expect to
+get something out of it, that is, if we expect that there are some
+nonlinear relations in the data. On the other hand, if we construct
+models tailor-made to capture
+nonlinear relations we have spotted by eye-balling residual plots we
+run the risk of overfitting random fluctuations. In particular,
+formal downstream justifications using statistical tests are invalidated.
+The eye-balling process is a model selection procedure with statistical
+implications, which are difficult to account for.
+
+We decided to expand `gestationalAge` using natural cubic splines
+with three knots in 38, 40, and 42 weeks. The boundary knots were determined
+by the range of the data set, and were thus 25 and 47. We also expanded
+`age`, but we let the `ns()` function
+determine the knots automatically for that predictor. The last continuous
+predictor, `alcohol` has a very skewed marginal distribution, and it
+was not judged to be suitable for a standard basis expansion.
+We also present a test of the nonlinear effect. \index{spline expansion}
+
+```{r}
+#| label: filter-birth-weight-again-and-lm
+data("birth_weight")
+birth_weight <- filter(
+  birth_weight,
+  weight > 32,
+  length > 10 & length < 99,
+  gestationalAge > 18
+) |> 
+  na.omit() |>
+  select(- c(interviewWeek, fetalDeath))
+
+form <- weight ~ gestationalAge + 
+                 age + 
+                 children +
+                 coffee + 
+                 alcohol + 
+                 smoking + 
+                 abortions + 
+                 feverEpisodes
+
+birth_weight_lm <- lm(form, data = birth_weight)
+
+
+binScale <- scale_fill_continuous(
+  breaks = c(1, 10, 100, 1000),
+  low = "gray80", 
+  high = "black",
+  trans = "log", 
+  guide = "none"
+)
+```
+
+[Nonlinear main effects model.]{.aside}
+
+```{r}
+#| label: tbl-test-nonlinear-model
+#| tbl-cap: "Test of the model including a spline expansion of `gestationalAge` against the main effects model."
+#| tbl-cap-location: bottom
+#| code-fold: show
+nsg <- function(x) ns(x, knots = c(38, 40, 42), Boundary.knots = c(25, 47))
+
+form <- weight ~ nsg(gestationalAge) + 
+    ns(age, df = 3) + 
+    children +
+    coffee + 
+    alcohol + 
+    smoking + 
+    abortions + 
+    feverEpisodes
+
+birth_weight_lm_spline <- lm(form, data = birth_weight)
+
+anova(birth_weight_lm, birth_weight_lm_spline) |> knitr::kable()
+```
+
+The main effects model is a submodel of the nonlinear main effects model.
+This is not obvious. The nonlinear expansion will result in 4 columns in
+the model matrix $\mathbf{X}$, none of which being `gestationalAge`. However, the
+linear function is definitely a natural cubic spline, and it is thus in the
+span of the 4 basis functions. With $\mathbf{X}'$ the model matrix for the main
+effects model, it follows that there is a $C$ such that @eq-subspace holds.
+This justifies the use of the $F$-test. The conclusion from @tbl-test-nonlinear-model
+is that the nonlinear model is highly significant.
+
+
+```{r}
+#| label: fig-spline-model-diag
+#| fig-cap: "Diagnostic plots for the model with `gestationalAge` expanded using splines."
+#| fig-cap-location: margin
+#| opts.label: widefigure3
+#| message: false
+birth_weight_diag <- augment(birth_weight_lm_spline, data = birth_weight)
+p1 <- ggplot(birth_weight_diag, aes(.fitted, .std.resid)) +
+  stat_binhex(bins = 20) + binScale + geom_smooth(linewidth = 1, fill = "blue") +
+  xlab("fitted values") + ylab("standardized residuals")
+p2 <- ggplot(birth_weight_diag, aes(gestationalAge, .std.resid)) +
+  stat_binhex(bins = 20) + binScale + geom_smooth(linewidth = 1, fill = "blue") +
+  xlab("gestationalAge") + ylab("")
+p3 <- ggplot(birth_weight_diag, aes(sample = .std.resid)) +
+  geom_abline(intercept = 0, slope = 1, color = "blue", linewidth =  1) +
+  geom_qq() + 
+  xlab("theoretical quantiles") + ylab("")
+gridExtra::grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+The positioning of the knots for spline expansion
+is selected based on the marginal distribution of the predictor[^knots]
+The knots should be placed reasonably relative to the distribution of the
+predictor, so that we learn about nonlinearities where there is data to learn from.
+In this case we placed knots at the median and the 10% and 90% quantiles
+of the distribution of `gestationalAge`. The `ns()` function
+makes a similar automatic selection of knots based on the marginal distribution
+of the predictor variables when it is applied in the formula. One just have to
+specify the number of basis functions using the `df` argument.
+
+
+[^knots]: Letting the knots be parameters to be estimated is not a statistically viable idea. The resulting estimation problem becomes computationally much more difficult, and it is not straightforward how to adjust subsequent statistical analyses to account for the data adaptive choice of knots.
+
+An eye-ball decision based on
+@fig-weight-model-control would be that a single knot around 41 would have done the job,
+but we refrained from making such a decision. A subsequent test of the
+nonlinear effect with 1 degrees of freedom would not appropriately take
+into account how the placement of the knot was made. 
+
+
+@fig-spline-model-diag shows diagnostic plots for the nonlinear main
+effects model. They show that the inclusion of the nonlinear effect
+removed the previously observed problem with assumption **A1**. The error distribution
+is still not normal, but right skewed with a fatter right tail than the normal
+distribution. There is a group
+of extreme residuals for preterm born children, which should be given more attention
+than they will be given here.
+
+
+[Reduced nonlinear main effects model.]{.aside}
+
+```{r}
+#| label: tbl-spline-small
+#| tbl-cap: "Test of weak predictors in the nonlinear main effects model."
+#| tbl-cap-location: bottom
+#| code-fold: show
+form <- weight ~ nsg(gestationalAge) + 
+    children + 
+    coffee + 
+    smoking
+
+birth_weight_lm_spline_small <- lm(form, data = birth_weight)
+
+anova(birth_weight_lm_spline_small, birth_weight_lm_spline) |> 
+  knitr::kable()
+```
+
+
+@tbl-spline-small shows that dropping the four weak predictors from
+the nonlinear main effects model is again borderline and not really significant.
+
+@fig-spline-fit-birth shows examples of the fit for the reduced nonlinear main effects model.
+The figure illustrates the general nonlinear relation between `weight` and `gestationalAge`. Differences
+due to other variables are purely additive in this model, which amounts to translations up
+or down of the curve. The figure shows a couple of extreme cases; the majority group who
+have had children before and who do not smoke or drink coffee, and a minority group who have
+had children before and smoke and drink coffee the most. What we should notice is
+the wider confidence band on the latter (`smoke = 3`, `coffee = 3`) compared
+to the former, which is explained by the skewness of the predictor distributions.
+@tbl-spline-conf-int gives confidence intervals for the remaining parameters
+based on the nonlinear main effects model.
+
+```{r}
+#| label: fig-spline-fit-birth
+#| fig-cap: "Main effects model with basis expansion of `gestationalAge`. Here illustrations of the fitted mean and 95% confidence bands for `children=1`."
+#| fig-cap-location: margin
+#| opts.label: widefigure2
+pred_frame <- expand.grid(
+  children = factor(1),
+  smoking = factor(c(1, 3)),
+  coffee = factor(c(1, 3)),
+  gestationalAge = seq(25, 47, 0.1),
+  alcohol = 0,
+  age = median(birth_weight$age),
+  feverEpisodes = 0,
+  abortions = factor(0)
+)
+
+pred <- predict(
+  birth_weight_lm_spline, 
+  newdata = pred_frame,
+  interval = "confidence"
+)
+
+pred_frame <- cbind(pred_frame, pred)
+
+ggplot(pred_frame, aes(gestationalAge, fit, color = coffee)) + 
+  geom_line() + ylab("weight") +
+  geom_ribbon(
+    aes(ymin = lwr, ymax = upr, fill = coffee), 
+    alpha = 0.3
+  ) + facet_grid(. ~ smoking, label = label_both)
+```
+
+```{r}
+#| label: tbl-spline-conf-int
+#| tbl-cap: "Confidence intervals."
+#| tbl-cap-location: bottom
+#| column: margin
+#| echo: false
+tidy(birth_weight_lm_spline, conf.int = TRUE)[9:14, ] |>
+  select(c(term, conf.low, conf.high)) |> knitr::kable(digits = 3)
+```
+
+To conclude the analysis, we will again include interactions. However, the variable
+`gestationalAge` is in fact only taking the integer values 25 to 47,
+and the result of a nonlinear effect coupled with a third order interaction, say,
+results in an almost saturated model. That is, the interaction model has more or less a separate mean for
+all observed combinations of the predictors. We choose to consider a less complex model with all
+second order interactions between `gestationalAge` and the three factors that
+we have judged to be strong predictors.
+
+[Nonlinear interaction model.]{.aside}
+
+```{r}
+#| label: nonlinear-int-model
+#| code-fold: show
+form <- weight ~ (smoking + coffee + children) * nsg(gestationalAge) +
+   ns(age, df = 3) + 
+   alcohol + 
+   abortions + 
+   feverEpisodes
+
+birth_weight_lm_spline_int <- lm(form, data = birth_weight)
+```
+
+
+```{r}
+#| label: fig-spline-int-fit
+#| fig-cap: "Comparison of the interaction model (red, 95% gray confidence bands) with the nonlinear main effects model (blue)."
+#| opts.label: widefigure2
+#| column: page
+pred_frame <- expand.grid(
+  children = factor(c(0, 1)),
+  smoking = factor(c(1, 2, 3)),
+  coffee = factor(c(1, 2, 3)),
+  gestationalAge = 25:47,
+  alcohol = 0,
+  age = median(birth_weight$age),
+  feverEpisodes = 0,
+  abortions = factor(0)
+)
+
+pred <- predict(birth_weight_lm_spline_int, newdata = pred_frame, interval = "confidence")
+
+
+pred_frame <- cbind(pred_frame, pred)
+pred_frame$fit_spline <- predict(birth_weight_lm_spline, newdata = pred_frame)
+
+ggplot(pred_frame, aes(gestationalAge, fit)) +
+  geom_point(data = birth_weight, aes(y = weight), size = 0.3, alpha = 0.1) + 
+  facet_grid(coffee ~ children + smoking, label = label_both) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), fill = gray(0.85)) +
+  geom_line(color = "red") + coord_cartesian(ylim = c(0, 5000)) +
+  geom_line(aes(y = fit_spline), color = "blue") + ylab("weight") +
+  scale_y_continuous(breaks = c(1000, 2000, 3000, 4000))
+```
+
+
+@fig-spline-int-fit shows the predicted values for the reduced nonlinear main effects model for
+all combinations of `children`, `smoking` and `coffee` (blue curves).
+These curves are all just translations of each other. In addition, the figure
+shows the predicted values and a 95% confidence band as estimated with the
+nonlinear interaction model. We observe minor deviations for the
+reduced main effects model, which can explain the significance of the
+test, but the deviations appear unsystematic and mostly related to
+extreme values of `gestationalAge`. The conclusion is that even
+though the inclusion of interaction effects is significant, there is
+little to gain over the reduced nonlinear main effects model.
+
+```{r}
+#| label: tbl-nonlinear-int-model
+#| tbl-cap: "Test of nonlinear interaction model."
+#| tbl-cap-location: bottom
+anova(birth_weight_lm_spline, birth_weight_lm_spline_int) |> 
+  knitr::kable(digits = 10)
+```
+
+@tbl-nonlinear-int-model shows that inclusion of interaction terms is still significant by a
+formal statistical test. It is, however, always a good idea to visualize how the nonlinear interaction model
+differs from the model with only main effects as above instead of just focusing on the formal test. The test
+may, on the other hand, support the visualization as a quantification of whether the differences
+seen in a figure are actually statistically significant.
+
+## Practical data analysis
+
+```{r}
+#| eval: false
+#| echo: false
+library(neuralnet)
+standard <- function(x) (x - min(x)) / (max(x) - min(x))
+unstandard <- function(x, min, max) x * (max - min) + min 
+
+birth_weight_sub <- select(birth_weight, c(weight, gestationalAge)) |> 
+    mutate(weight_st = standard(weight), gestationalAge_st = standard(gestationalAge)) 
+softplus <- function(x) log(1 + exp(x))
+form <- weight_st ~ gestationalAge_st ## + age + smoking + coffee + children + alcohol + abortions + feverEpisodes
+tmp <- neuralnet(form, data = birth_weight_sub, hidden = 2, linear.output = FALSE, act.fct = softplus)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+birth_weight_sub <- mutate(
+    birth_weight_sub, 
+    pred = unstandard(predict(tmp, newdata = birth_weight_sub)[, 1], min(weight), max(weight)) 
+)
+plot(tmp)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+ggplot(birth_weight_sub, aes(gestationalAge, weight)) + 
+    geom_point(size = 1, alpha = 0.1) +
+    geom_line(aes(y = pred), color = "red")
+```
+
+```{r}
+#| eval: false
+#| echo: false
+library(keras3)
+x_train <- birth_weight$gestationalAge |> as.matrix()
+y_train <- birth_weight$weight
+# x_train <- standard(x_train)
+y_train <- standard(y_train)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+model <- keras_model_sequential(input_shape = 1)
+normalizer <-  layer_normalization() 
+normalizer |>  adapt(x_train)
+model |>
+    normalizer() |>
+    layer_dense(units = 100, activation = "relu") |>
+    layer_dense(units = 100, activation = "relu") |>
+    layer_dense(units = 1)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+compile(
+    model, 
+    loss = "mse"
+)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+# x_train_noise <- x_train #+ rnorm(length(x_train), 0, 0.05)
+history <- fit(model, x_train, y_train, batch_size = 1000, epochs = 100)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+plot(history)
+plot(x_train, y_train)
+lines(sort(x_train), predict(model, sort(x_train)), type = "l", ylim = c(0, 1), col = "blue")
+```
+
+
+## Causal interpretations
+
+```{r}
+#| eval: false
+#| echo: false
+c(29, 40, 50, 52, 54, 56, 58, 63) # Full range
+# The removes the smallest and largest
+birth_weight_mut <- mutate(birth_weight, length_bin = cut(length, breaks = c(40, 50, 52, 54, 56, 58))) |>
+    na.omit()
+
+ggplot(birth_weight_mut, aes(coffee, weight, fill = length_bin)) + 
+    geom_boxplot(outliers = FALSE) 
+```
+
+```{r}
+#| eval: false
+#| echo: false
+birth_weight_sum <- group_by(birth_weight_mut, coffee) |>
+    summarize(mean_weight = mean(weight))
+
+group_by(birth_weight_mut, length_bin, coffee) |>
+    summarize(mean_weight = mean(weight), freq = n()) |>
+    ungroup() |>
+    group_by(coffee) |>
+    mutate(freq = freq / sum(freq)) |> 
+    ggplot(aes(coffee, mean_weight, color = length_bin, group = length_bin)) + 
+    geom_line() + 
+    geom_point() + 
+    geom_point(data = birth_weight_sum, aes(color = NULL, group = 1)) +
+    geom_line(data = birth_weight_sum, aes(color = NULL, group = 1))
+```
+
+```{r}
+#| eval: false
+#| echo: false
+lm(weight ~ coffee + length, data = birth_weight) |> tidy()
+lm(weight ~ coffee , data = birth_weight) |> tidy()
+```
+
+```{r}
+#| eval: false
+#| echo: false
+ggplot(birth_weight_mut, aes(gestationalAge, weight, color = length)) + 
+    geom_point() + 
+    geom_smooth(aes(group = length_bin), color = "black", linetype = 2, method = "lm", se = FALSE) + 
+    geom_smooth(aes(color = NULL, group = NULL), color = "black", method = "lm", se = FALSE) + 
+    scale_color_fermenter(palette = "GnBu", breaks = c(40, 50, 52, 54, 56, 58))
+```
+
+```{r}
+#| eval: false
+#| echo: false
+lm(weight ~ gestationalAge * length, data = birth_weight) |> tidy()
+lm(weight ~ gestationalAge + length, data = birth_weight) |> tidy()
+lm(weight ~ gestationalAge, data = birth_weight) |> tidy()
+```
+
+
+```{r}
+#| label: a-tikz-figure
+#| engine: tikz
+#| eval: false
+#| echo: false
+\begin{tikzpicture}[description/.style={fill=white,inner sep=2pt}] 
+\matrix (m) [matrix of math nodes, row sep=3em, column sep=3em, text height=1.5ex, text depth=0.25ex] {
+ \textrm{Low birth weight} & \textrm{Risk factors} \\
+ \textrm{Smoking} & \textrm{Mortality}\\}; 
+\path[->] 
+(m-1-2) edge (m-1-1) 
+(m-2-1) edge (m-1-1)
+(m-1-2) edge (m-2-2);
+\end{tikzpicture}
+```
+
+
+```{r}
+#| label: another-tikz-figure
+#| engine: tikz
+#| column: page
+#| eval: false
+#| echo: false
+\begin{tikzpicture}
+
+  \draw[->] (-0.5,0) -- (5.5,0) node[right] {predictors}; 
+  \draw[->] (0,-0.5) -- (0,4) node[above] {$|\beta_i|/\text{se}_i$}; 
+  \draw[-, blue!40!white] (0.4, 0) node [below, black] {1} -- (0.4, 3);
+  \draw[-, blue!40!white] (0.8, 0) -- (0.8, 2.9);
+  \draw[-, blue!40!white] (1.2, 0) -- (1.2, 2.8);
+  \draw[-, blue!40!white] (1.6, 0) -- (1.6, 2.4);
+  \draw[-, blue!40!white] (2.0, 0) -- (2.0, 2);
+  \draw[-, blue!40!white] (2.4, 0) -- (2.4, 1.5);
+  \draw[-, blue!40!white] (2.8, 0) -- (2.8, 1.3);
+  \draw[-, blue!40!white] (3.2, 0) -- (3.2, 1);
+  \draw[-, blue!40!white] (3.6, 0) -- (3.6, 0.8);
+  \draw[-, blue!40!white] (4.0, 0) -- (4.0, 0.5);
+  \draw[-, blue!40!white] (4.4, 0) -- (4.4, 0.4);
+  \draw[-, blue!40!white] (4.8, 0) node [below, black] {$p$} -- (4.8, 0.2);
+  \draw[-, red!40!white] (-0.1, 1)  node [left] {2} -- (5, 1);
+  \node at (5, 4) {(A)};
+
+  \begin{scope}[shift = {(0, 5)}]
+  \draw[->] (-0.5,0) -- (5.5,0) node[right] {predictors}; 
+  \draw[->] (0,-0.5) -- (0,4) node[above] {$|\beta_i|/\text{se}_i$}; 
+  \draw[-, blue!40!white] (0.4, 0) node [below, black] {1} -- (0.4, 3);
+  \draw[-, blue!40!white] (0.8, 0) -- (0.8, 2.9);
+  \draw[-, blue!40!white] (1.2, 0) -- (1.2, 2.8);
+  \draw[-, blue!40!white] (1.6, 0) -- (1.6, 2.4);
+  \draw[-, blue!40!white] (2.0, 0) -- (2.0, 2);
+  \draw[-, blue!40!white] (2.4, 0) -- (2.4, 1.5);
+  \draw[-, blue!40!white] (2.8, 0) -- (2.8, 1.3);
+  \draw[-, blue!40!white] (3.2, 0) -- (3.2, 1);
+  \draw[-, blue!40!white] (3.6, 0) -- (3.6, 0.8);
+  \draw[-, blue!40!white] (4.0, 0) -- (4.0, 0.5);
+  \draw[-, blue!40!white] (4.4, 0) -- (4.4, 0.4);
+  \draw[-, blue!40!white] (4.8, 0) node [below, black] {$p$} -- (4.8, 0.2);
+  \draw[-, red!40!white] (-0.1, 1)  node [left] {2} -- (5, 1);
+  \node at (5, 4) {(A)};
+  \end{scope}
+\end{tikzpicture}
+```
+
+
+## Exercises {.unnumbered}
+
+::: {#exr-formulas-spline-expansions}
+
+This is a continuation of Exercise @exr-formulas.
+
+```{r}
+#| label: formula-sim-data
+#| code-fold: show
+set.seed(04022016)
+factor_labels <- rep(c("A", "B", "C"), each = 50)
+formula_data <- tibble(
+    x =  rnorm(150, 0),
+    z = factor(sample(factor_labels)),
+    mu = (z == "A") + cos(x) + 0.5 * (z == "B") * sin(x),
+    y = rnorm(150, mu, 0.5)
+)
+```
+
+
+Expansions can be achieved by applying an R function that returns a 
+matrix of basis function evaluations when applied to a vector of 
+predictor values. We consider a spline basis expansion.
+
+```{r}
+#| label: formula-expansions
+#| code-fold: show
+library(splines)
+model.matrix(y ~ ns(x, df = 4), formula_data) |>
+    head()
+```
+
+Before you run the R expression below, answer the following question on the 
+basis of what you have learned.
+
+::: 
+
+1.  Determine the number of columns for the model matrix below and 
+    explain and interpret what the columns mean?
+
+```{r}
+#| label: formula-expansions2
+#| eval: false
+#| code-fold: show
+model.matrix(y ~ ns(x, df = 4) * z, formula_data) |>
+    head()
+```
+
+@fig-formula-linear-model was obtained by fitting the linear model using the model 
+matrix, or rather the formula, from above. The figure illustrates the model fit by 
+comparing the fitted model directly to the true means and via the residuals. 
+Fitted values and residuals were computed using the `augment()` function from the 
+broom package. 
+
+```{r}
+#| label: fig-formula-linear-model
+#| opts.label: widefigure
+#| echo: false
+#| message: false
+#| fig-cap: "Left: The fitted values plotted as lines together with the data. The dashed lines are the true means. Right: a residual plot."
+#| cap-location: margin
+y_lm <- lm(y ~ ns(x, df = 4) * z, formula_data)
+formula_data_aug <- broom::augment(y_lm, data = formula_data)
+p1 <- ggplot(formula_data_aug, aes(x, y, color = z)) + 
+    geom_point() + geom_line(aes(y = mu), linetype = 2) + 
+    geom_line(aes(y = .fitted)) + theme(legend.position = "top")
+p2 <- ggplot(formula_data_aug, aes(.fitted, .resid, color = z)) + 
+    geom_point() + theme(legend.position = "top", legend.box.background = element_rect(fill = NA, color = NA)) + 
+    geom_smooth(aes(color = NULL), color = NA) +
+    geom_smooth(aes(color = NULL), se = FALSE)
+gridExtra::grid.arrange(p1, p2, ncol = 2) 
+```
+
+2. Reproduce @fig-formula-linear-model and discuss the model fit.
+
+
+::: {#exr-column-space-bspline}
+Consider the following matrices
+
+```{r}
+#| code-fold: false
+X <- splines::bs(
+    seq(0, 1, 0.01), 
+    knots = c(0.3, 0.5, 0.7)
+)
+X_prime <- seq(0, 1, 0.01)
+```
+
+of $B$-spline basis functions evaluated on a grid in the interval $[0, 1]$. 
+Use @exr-column-space to verify that `X_prime` is in the
+column space of `X`. You can use the formula from 
+the exercise to compute $\mathbf{C}.$ Can you also use `lm.fit()`?
+:::
