@@ -1,0 +1,101 @@
+# Existence and uniqueness {#sec-existence-uniqueness}
+
+::: {.callout-important}
+This chapter is currently undergoing conversion and substantial changes 
+will be made without notice. 
+:::
+
+## Exercises {.unnumbered}
+
+
+::: {#exr-gen-exists}
+This exercise is about an additive genetic effects
+model. The response $Y$ is an indicator of a phenotype, e.g., whether
+an individual has brown eyes or whether the individual has a
+particular disease. Some phenotypes are determined completely by well known
+genotypes, while others have a less well understood genetic component. 
+
+A genotype is an unordered pair of possible alleles (at a given genomic location) and can
+usually take three different values -- here denoted bb, Bb and BB. The brown
+eye color is known to be dominant over the blue, so if B denotes the
+brown eye allele, then BB as well as Bb will result in brown eyes
+whereas only bb will result in blue eyes[^reality].
+
+[^reality]: In reality, the genetics of eye color is somewhat more complicated, but this simple version of the story illustrates the principle.
+
+For the purpose of this exercise you don't need to understand the
+genetic details, but genetics provides a context where the model considered
+is relevant. We recode the genotype as a numerical variable $X$ as
+follows:
+
+| genotype | bb | Bb | BB |
+|----------|----|----|----|
+| $X$      | 0  | 1  | 2  |
+
+Thus $X$ denotes the number of $B$ alleles, and we will use it to
+construct a probabilistic model of the phenotype response $Y$ given the
+genotype predictor $X$. The additive genetic effects model is given by 
+$$
+    \textrm{logit}(\mathbf{P}(Y = 1 \mid X = x)) = \beta_0 + \beta_1 x.
+$$ {#eq-binmodel}
+Note that this additive model will not be a good model of eye color,
+but it can be a useful model of the genetic component of a disease. 
+
+Having observed $n$ individuals we can summarize the data into a table
+of the following form: 
+
+| $X$              | $0$         | $1$         | $2$         | Total   |
+|------------------|-------------|-------------|-------------|---------|
+| number of $1$-s  | $m_0$       | $m_1$       | $m_2$       | $m$     |
+| number of $0$-s  | $n_0 - m_0$ | $n_1- m_1$  | $n_2- m_2$  | $n - m$ |
+| Total            | $n_0$       | $n_1$       | $n_2$       | $n$     |
+
+It is assumed that at least two of $n_0, n_1$ and $n_2$ are nonzero. 
+
+
+Introduce also the vectors 
+$$
+    \mathbf{a} = \left(\begin{array}{c} 1 \\ 0 \end{array}\right), \quad
+    \mathbf{b} = \left(\begin{array}{c} 1 \\ 1 \end{array}\right) \quad
+    \text{and} \quad
+    \mathbf{c} = \left(\begin{array}{c} 1 \\ 2 \end{array}\right).
+$$
+
+The first two questions deal with existence and uniqueness of the MLE
+in this model. Define 
+$$
+    C = \{ \mu_0 \mathbf{a} + \mu_1 \mathbf{b} + \mu_2 \mathbf{c} \mid
+        \mu_0 \in (0, n_0), \mu_1 \in (0, n_1), \mu_2 \in (0, n_2) \}
+$$
+
+1. Show that the MLE in the model given by @eq-binmodel exists and is unique if and only if
+    $$
+        m_0 \mathbf{a} + m_1 \mathbf{b} + m_2 \mathbf{c} \in C.
+    $$
+
+
+Consider the following concrete data set:
+
+| $X$              | $0$  | $1$  | $2$  | Total |
+|------------------|------|------|------|-------|
+| number of $1$-s  | $0$  | $1$  | $5$  | $6$   |
+| number of $0$-s  | $100$| $99$ | $95$ | $294$ |
+| Total            | $100$| $100$| $100$| $300$ |
+
+In this data set there are $n = 300$ individuals and $m = 6$ of them had the
+disease. Of these, 5 had the BB allele, 1 had the Bb allele and 0 had
+the bb allele. 
+
+2. Make a figure illustrating the set $C$ for the concrete data set in
+    the table above. Show that in this case the MLE exists and is unique. 
+
+3. Find a general criterion in terms of $n_0, n_1, n_2$ and $m_0, m_1, m_2$ for the
+    existence of the MLE.
+    
+    *Hint: You can simplify the problem to the case $n_0 = n_1 = n_2 = 100$.*
+
+4. Fit the model given by @eq-binmodel to the concrete data set in the table above. 
+
+    *Hint: You can fit the model using `glm()` based on the summary data in the table. This requires a specification of a two-column response in the formula. See also the remark about fitting binomial and quasibinomial models in the Details section in the help page for `glm()`.*
+
+::: 
