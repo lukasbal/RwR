@@ -895,7 +895,7 @@ the $i$-th *raw residual* is \index{residual!raw}
 $$
     Y_i - \hat{\mu}_i.
 $$
-In the R terminology the raw residual is called the *outcome residual*. \index{residual!outcome}
+In the R terminology the raw residual is called the *response residual*. \index{residual!outcome}
 
 [The sum of the squared Pearson residuals is the Pearson $\chi^2$-statistic.]{.aside}
 Whenever the variance function is not constant, the raw residual is not particularly useful. 
