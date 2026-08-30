@@ -1,11 +1,23 @@
 /* Quarto nests part of a proof/example in an extra div.page-columns
-   wrapper whenever a margin note occurs partway through, not just at
-   the very end. So the true last paragraph can be nested at any depth
-   rather than a direct child. p:last-of-type finds the last paragraph
-   at each nesting level; the :not(:has(...)) exclusion drops any such
-   paragraph that is followed by a later chunk (a .page-columns sibling
-   containing a paragraph of its own), leaving only the paragraph that
-   is actually last in document order. */
+   wrapper whenever a margin note occurs, and that wrapper can appear
+   anywhere in the block -- not only at the end. It might wrap the
+   final paragraph (nothing follows it) or an early paragraph (with
+   plain paragraphs continuing after it at the outer level). Also, the
+   outer div.proof/div.theorem.example itself often carries the
+   page-columns class too (whenever it has margin content anywhere
+   inside), so "wrapper" below specifically means an *inner* anonymous
+   page-columns div -- one that is not itself the proof/example -- as
+   selected by .page-columns:not(.proof):not(.example).
+
+   Finding "the true last paragraph" needs two rules:
+     - a paragraph whose parent is not such an inner wrapper is last
+       only if no later sibling contains a paragraph;
+     - a paragraph nested one level inside such a wrapper is last only
+       if that *wrapper* (not the paragraph) has no later sibling
+       containing a paragraph.
+   Footnote/margin-note text living inside .column-margin is excluded
+   via :not(.column-margin *) so it's never mistaken for the block's
+   own last paragraph and marked with a spurious symbol of its own. */
 
 /* Markers are drawn with a CSS border rather than a Unicode glyph
    (e.g. U+25FB) because outlined geometric characters render as a
@@ -20,7 +32,8 @@ div.theorem.example {
 
 /* End-of-proof marker (QED), matching the square automatically added
    by the LaTeX proof environment in the PDF output. */
-div.proof p:last-of-type:not(:has(~ .page-columns p))::after {
+div.proof p:last-of-type:not(.column-margin *):not(:has(~ .page-columns p)):not(.page-columns:not(.proof):not(.example) > p)::after,
+div.proof .page-columns:not(.proof):not(.example):not(:has(~ p, ~ * p)) p:last-of-type:not(.column-margin *)::after {
   content: "";
   width: 0.65em;
   height: 0.65em;
@@ -33,7 +46,8 @@ div.proof p:last-of-type:not(:has(~ .page-columns p))::after {
 }
 
 /* End-of-example marker, distinct from the proof QED square. */
-div.theorem.example p:last-of-type:not(:has(~ .page-columns p))::after {
+div.theorem.example p:last-of-type:not(.column-margin *):not(:has(~ .page-columns p)):not(.page-columns:not(.proof):not(.example) > p)::after,
+div.theorem.example .page-columns:not(.proof):not(.example):not(:has(~ p, ~ * p)) p:last-of-type:not(.column-margin *)::after {
   content: "";
   width: 0.55em;
   height: 0.55em;
