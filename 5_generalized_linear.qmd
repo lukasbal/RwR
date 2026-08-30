@@ -1,9 +1,5 @@
 # Generalized linear models {#sec-generalized-linear}
 
-::: {.callout-warning}
-This chapter is still a draft and minor changes are made without notice.
-:::
-
 This chapter treats a generalization of the linear model that preserves much of 
 its tractability, but can be adapted to cases where the linear model 
 is inappropriate.  This generalization is tightly linked to the exponential dispersion distributions
@@ -21,14 +17,14 @@ as treated in @sec-linear.
 ## Model assumptions {#sec-glm-model-assumptions}
 
 To motivate the general model assumptions we will consider three examples. 
-In all three examples $X$ denote a vector of predictor variables, and we 
-introduce a model of the response given the predictors via a linear combination 
-$X^T \beta$ of the predictors for some parameter vector $\beta$. 
+In all three examples $X$ denotes a vector of predictor variables, and we 
+introduce a model of the outcome given the predictors via a linear combination 
+$X^T \beta$ of the predictors for some parameter vector $\beta.$ 
 
 \index{distribution!binary}
 
 ::: {#exm-glm-binary}
-For a binary response $Y \in \{0, 1\}$ we know that 
+For a binary outcome $Y \in \{0, 1\}$ we know that 
 $$
     \mathbf{E}(Y \mid X) = \mathbf{P}(Y = 1 \mid X) \in [0, 1]
 $$
@@ -36,14 +32,14 @@ and
 $$
     \mathbf{V}(Y \mid X) = \mathbf{P}(Y = 1 \mid X)(1 - \mathbf{P}(Y = 1 \mid X)) = \mathcal{V}(\mathbf{E}(Y \mid X))
 $$
-for the variance function $\mathcal{V}(\mu) = \mu(1 - \mu)$.
+for the variance function $\mathcal{V}(\mu) = \mu(1 - \mu).$
 
-A linear model, $\mathbf{P}(Y = 1 \mid X) = X^T \beta$, of the conditional expectation is problematic. 
+A linear model, $\mathbf{P}(Y = 1 \mid X) = X^T \beta,$ of the conditional expectation is problematic. 
 The constraint that a probability must be in $[0,1]$ can only be 
-enforced by restricting the parameter space of $\beta$. The restriction will 
+enforced by restricting the parameter space of $\beta.$ The restriction will 
 depend on the values of the observed predictors, and it is 
 generally impossible to ensure that all future predictions 
-will be in $[0,1]$. Moreover, the variance is not constant 
+will be in $[0,1].$ Moreover, the variance is not constant 
 but depends upon the expectation via the variance function. 
 
 One solution is to consider a model of the form
@@ -55,17 +51,17 @@ One possible choice is the logistic function, which corresponds to the canonical
 link for the Bernoulli distribution, and which results in 
 the *logistic regression model*. \index{logistic regression} 
 Thus the model 
-of the expectation is given in terms of the linear combination $X^T \beta$,
-but it is (nonlinearly) transformed using $\mu$. By assumption, $\mu$ takes 
-values in $[0, 1]$. The variance is then $\mathcal{V}(\mu(X^T \beta))$.
+of the expectation is given in terms of the linear combination $X^T \beta,$
+but it is (nonlinearly) transformed using $\mu.$ By assumption, $\mu$ takes 
+values in $[0, 1].$ The variance is then $\mathcal{V}(\mu(X^T \beta)).$
 ::: 
 
-[^mean-value-function]: Typically a continuous and monotone function -- a distribution function for instance.
+[^mean-value-function]: Typically a continuous and monotone function---a distribution function for instance.
 
 \index{distribution!Poisson}
 
 ::: {#exm-glm-poisson}
-If $Y$ is Poisson distributed, and thus takes values in  $\mathbb{N}_0$,
+If $Y$ is Poisson distributed, and thus takes values in  $\mathbb{N}_0,$
 we know that 
 $$
     \mathbf{E}(Y \mid X) \geq 0,
@@ -74,60 +70,23 @@ and
 $$
     \mathbf{V}(Y \mid X) = \mathbf{E}(Y \mid X)  = \mathcal{V}(\mathbf{E}(Y \mid X))
 $$
-for the variance function $\mathcal{V}(\mu) = \mu$. As for the 
-Bernoulli model a linear model of the mean can produce values
-outside the distributions range of possible mean values. 
+for the variance function $\mathcal{V}(\mu) = \mu.$ As for the 
+Bernoulli model, a linear model of the mean can produce values
+outside the distribution's range of possible mean values. 
 One solution is the *log-linear* model \index{log-linear}
 $$\mathbf{E}(Y \mid X)  = e^{X^T \beta}.$$
-That is, the mean value function is the exponential function. 
+That is, the mean value function is the exponential function, and the 
+logarithm of the mean is linear in the parameters. 
 :::
 
-\index{distribution!log-normal}
-
-::: {#exm-log-normal} 
-
-[@exm-log-normal is an example of a model satisfying the two assumptions 
-**GA1** and **GA2** below, but with a response distribution that is *not* an exponential dispersion distribution.]{.aside}
-If $Y$ is a positive random variable given by 
-$$
-    \log(Y) = X^T\beta + \varepsilon
-$$
-for $\varepsilon \sim \mathcal{N}(0,\sigma^2)$ then 
-$$
-    \mathbf{E}(Y \mid X) = e^{X^T \beta} \mathbf{E}(e^{\varepsilon}).
-$$
-The distribution of $e^{\varepsilon}$ is a log-normal distribution with mean 
-$e^{\sigma^2/2}$, hence 
-$$
-    \mathbf{E}(Y \mid X) = e^{X^T \beta + \sigma^2/2},
-$$
-which shows that the model is a log-linear model. \index{log-linear model}
-The variance is 
-$$
-    \begin{align*}
-        \mathbf{V}(Y \mid X) & = e^{2 X^T \beta} \mathbf{V}(e^{\varepsilon}) = e^{2 X^T \beta} (e^{\sigma^2} - 1) e^{\sigma^2} \\
-        & =  (e^{\sigma^2} - 1)(\mathbf{E}(Y \mid X))^2.
-    \end{align*}
-$$
-Thus by introducing the dispersion parameter $\varphi = e^{\sigma^2} - 1$ and 
-the variance function $\mathcal{V}(\mu) = \mu^2$ we see that 
-$$
-    \mathbf{V}(Y \mid X) = \varphi \mathcal{V}(\mathbf{E}(Y \mid X)).
-$$
-In conclusion, the log-normal model is a log-linear model with a 
-quadratic variance function. It follows from @exm-gam that 
-the exponential dispersion model with quadratic variance function 
-is the Gamma model. Thus an alternative to the log-normal model with the 
-same mean and variance structure is a Gamma model with the log-link. 
-::: 
-
-The linear model assumptions **A1**--**A3** can be generalized by allowing for 
+To accommodate models such as the log-linear Poisson model and the 
+logistic Bernoulli model, we generalize the linear model assumptions **A1**--**A3** by allowing for 
 nonlinear relations between a linear combination of the predictors and 
 the mean and variance. This also allows for a non-constant variance as a 
-function of the mean. For exponential dispersion distributions such a relation 
-is a mathematical necessity as two of the examples above show. 
+function of the mean. For exponential dispersion distributions, such a relation 
+is a mathematical necessity as the two examples above show. 
 
-The assumptions **GA1**--**GA3** below, that replace A1--A3
+The assumptions **GA1**--**GA3** below, that replace **A1**--**A3**
 for generalized linear models, follow as abstractions of the 
 structure found for exponential dispersion models. 
 To ease notation we introduce 
@@ -135,7 +94,7 @@ $$
     \eta = X^T \beta
 $$
 to denote the *linear predictor* \index{linear predictor}
-for a vector of predictors $X$ and a vector of parameters $\beta$. 
+for a vector of predictors $X$ and a vector of parameters $\beta.$ 
 
 \index{assumptions!GA1--GA3}
 
@@ -160,19 +119,65 @@ for a vector of predictors $X$ and a vector of parameters $\beta$.
     $$
 
 The exponential dispersion distributions referred to in **GA3** are introduced 
-in @sec-exponential. The normal distribution, as in Assumption A3, is a special case. 
+in @sec-exponential. The normal distribution, as in Assumption **A3**, is a special case. 
 As for the linear model, the assumption **GA3** is a strong 
 distributional assumption, which implies **GA1** and **GA2** for *specific*
 choices of $\mu$ and $\mathcal{V}$ that depend on the map $\eta \mapsto \theta(\eta)$
 and the chosen exponential dispersion model. 
 
-The situation is, however, a little more complicated than for the linear model. With arbitrary 
-choices of $\mu$, $\mathcal{V}$ and $\varphi$ we cannot always
+
+\index{distribution!log-normal}
+
+::: {#exm-log-normal} 
+
+[@exm-log-normal is an example of a model satisfying the two assumptions 
+**GA1** and **GA2**, but with a outcome distribution that is *not* an exponential dispersion distribution.]{.aside}
+If $Y$ is a positive random variable given by 
+$$
+    \log(Y) = X^T\beta + \varepsilon
+$$
+for $\varepsilon \sim \mathcal{N}(0,\sigma^2)$ then 
+$$
+    \mathbf{E}(Y \mid X) = e^{X^T \beta} \mathbf{E}(e^{\varepsilon}).
+$$
+The distribution of $e^{\varepsilon}$ is a log-normal distribution with mean 
+$e^{\sigma^2/2},$ hence 
+$$
+    \mathbf{E}(Y \mid X) = e^{X^T \beta + \sigma^2/2},
+$$
+which shows that the model is a log-linear model. \index{log-linear model}
+The variance is 
+$$
+    \begin{align*}
+        \mathbf{V}(Y \mid X) & = e^{2 X^T \beta} \mathbf{V}(e^{\varepsilon}) = e^{2 X^T \beta} (e^{\sigma^2} - 1) e^{\sigma^2} \\
+        & =  (e^{\sigma^2} - 1)(\mathbf{E}(Y \mid X))^2.
+    \end{align*}
+$$
+Thus by introducing the dispersion parameter $\varphi = e^{\sigma^2} - 1$ and 
+the variance function $\mathcal{V}(\mu) = \mu^2$ we see that 
+$$
+    \mathbf{V}(Y \mid X) = \varphi \mathcal{V}(\mathbf{E}(Y \mid X)).
+$$
+In conclusion, the log-normal model is a log-linear model with a 
+quadratic variance function. It follows from @exm-gam that 
+the exponential dispersion model with quadratic variance function 
+is the Gamma model. Thus an alternative to the log-normal model with the 
+same mean and variance structure is a Gamma model with the log-link. 
+::: 
+
+To specify a generalized linear model, we can specify the 
+exponential dispersion distribution, and through the strong 
+distributional assumption **GA3** we implicitly specify the 
+mean value function via the parametrization $\eta \mapsto \theta(\eta)$
+and the variance function. We can also just through **GA1** and 
+**GA2** specify the mean value function and the variance function directly,
+but the situation is a little more complicated than for the linear model. With arbitrary 
+choices of $\mu,$ $\mathcal{V}$ and $\varphi$ we cannot always
 find a corresponding exponential dispersion model. Moreover, @exm-log-normal
 shows that there exist models fulfilling **GA1** and **GA2**, 
 which are not exponential dispersion models. For the log-normal model there 
 is an exponential dispersion model with an equivalent  mean and variance 
-structure, but the response distribution is different. In this light it is 
+structure, but the outcome distribution is different. In this light it is 
 noteworthy that the methodology developed does not hinge on **GA3** 
 to any great extent. Generalized linear models is largely a semiparametric 
 modeling framework of mean and variance. 
@@ -187,13 +192,13 @@ iterative weighted least squares (IWLS) algorithm that is used in practice to fi
 
 ### Maximum likelihood estimation
 
-We first consider the simple case where $Y \sim \mathcal{E}(\theta(\eta), \nu_{\varphi})$, that is, 
+We first consider the simple case where $Y \sim \mathcal{E}(\theta(\eta), \nu_{\varphi}),$ that is, 
 the distribution of $Y$ is given by the exponential dispersion model with canonical parameter 
-$\theta(\eta)$ and structure measure $\nu_{\varphi}$. Derivations of the score equation and Fisher 
+$\theta(\eta)$ and structure measure $\nu_{\varphi}.$ Derivations of the score equation and Fisher 
 information in this case can then be used to derive the score equation and Fisher information 
 in the general case when we have observations $Y_1, \ldots, Y_n$ that are conditionally independent given
 the predictors with 
-$Y_i \mid \mathbf{X} \sim \mathcal{E}(\theta(\eta_i), \nu_{\varphi})$ and $\eta_i = X_i^T \beta$. 
+$Y_i \mid \mathbf{X} \sim \mathcal{E}(\theta(\eta_i), \nu_{\varphi})$ and $\eta_i = X_i^T \beta.$ 
 
 \index{score statistic} \index{Fisher information} \index{likelihood!glm}
 
@@ -205,7 +210,7 @@ $$
 $$
 The Fisher information,
 $$
-    \mathcal{J}(\eta) = - \mathbf{E}(D_{\eta} U(\eta)),
+    \mathcal{J}(\eta) \coloneqq - \mathbf{E}(D_{\eta} U(\eta)),
 $$
 is minus the expectation of the Jacobian of the score statistic, or, equivalently, 
 the expectation of the Hessian of the negative log-likelihood. 
@@ -213,7 +218,7 @@ the expectation of the Hessian of the negative log-likelihood.
 
 \index{score equation}
 
-The score equation is obtained by equating the score statistic to $0$. In all that 
+The score equation is obtained by equating the score statistic to $0.$ In all that 
 follows, the dispersion parameter $\varphi$ is regarded as fixed. 
 
 ::: {#lem-scorefisher}
@@ -222,7 +227,7 @@ function is
 $$
     \ell_Y(\eta) = \frac{\theta(\eta) Y - \zeta(\eta)}{\varphi},
 $$
-the score statistic is $U(\eta) = \theta'(\eta)( Y - \mu(\eta)) / \varphi$, and the Fisher information 
+the score statistic is $U(\eta) = \theta'(\eta)( Y - \mu(\eta)) / \varphi,$ and the Fisher information 
 is
 $$
     \mathcal{J}(\eta) = \frac{\theta'(\eta) \mu'(\eta)}{\varphi}.
@@ -242,23 +247,23 @@ where we have used @cor-meanvar. Furthermore, we find that
 $$ 
     \varphi U'(\eta) = \theta''(\eta) (Y -  \mu(\eta)) - \theta'(\eta) \mu'(\eta),
 $$
-and since $E_{\eta} (Y)  = \mu(\eta)$ it follows that 
+and since $\mathbf{E}_{\eta} (Y)  = \mu(\eta)$ it follows that 
 $$
-    \mathcal{J}(\eta) = - E_{\eta}(U'(\eta)) = \frac{\theta'(\eta) \mu'(\eta)}{\varphi}.
+    \mathcal{J}(\eta) = - \mathbf{E}_{\eta}(U'(\eta)) = \frac{\theta'(\eta) \mu'(\eta)}{\varphi}.
 $$
 :::
 
-With only a single observation, the score equation is equivalent to $\mu(\eta) =  Y$, and it follows 
-that there is a solution to the score equation if $Y \in J = \mu(I)$. However, the situation with 
+With only a single observation, the score equation is equivalent to $\mu(\eta) =  Y,$ and it follows 
+that there is a solution to the score equation if $Y \in J = \mu(I).$ However, the situation with 
 a single observation is not relevant for practical purposes. The result is only given as 
 an intermediate step towards the next result. 
 
-The score statistic $U$ above is a function of the univariate parameter $\eta$. We adapt 
+The score statistic $U$ above is a function of the univariate parameter $\eta.$ We adapt 
 in the following the convention that for a vector $\boldsymbol{\eta} = (\eta_1, \ldots, \eta_n)^T$
 $$
     U(\boldsymbol{\eta}) = (U(\eta_1), \ldots, U(\eta_n))^T.
 $$
-That is, as a map the score statistic is applied coordinatewisely to the vector $\boldsymbol{\eta}$. Note
+That is, as a map the score statistic is applied coordinatewise to the vector $\boldsymbol{\eta}.$ Note
 that the derivative (the Jacobian) of $\boldsymbol{\eta} \mapsto U(\boldsymbol{\eta})$ is an $n \times n$ diagonal 
 matrix.
 [
@@ -275,7 +280,7 @@ $$
 Assume that $Y_1, \ldots, Y_n$ are conditionally independent 
 given $\mathbf{X}$ and that
 $Y_i \mid \mathbf{X} \sim \mathcal{E}(\theta(\eta_i), \nu_{\varphi})$
-where $\eta_i = X_i^T \beta$. Then with $\boldsymbol{\eta} = \mathbf{X}\beta$
+where $\eta_i = X_i^T \beta.$ Then with $\boldsymbol{\eta} = \mathbf{X}\beta$
 the score statistic expressed in the $\beta$-parameter is
 $$
     \mathcal{U}(\beta) = \mathbf{X}^T U(\boldsymbol{\eta}).
@@ -290,12 +295,17 @@ $$
     w_{ii} = \frac{(\mu_i')^2}{\varphi \mathcal{V}(\mu_i)} =
     \frac{\theta'_i\mu'_i}{\varphi}
 $$
-where $\mu_i = \mu(\eta_i)$, $\mu'_i = \mu'(\eta_i)$ and $\theta'_i = \theta'(\eta_i)$.
+where $\mu_i = \mu(\eta_i),$ $\mu'_i = \mu'(\eta_i)$ and $\theta'_i = \theta'(\eta_i).$
 [The diagonal weight matrix $\mathbf{W}$ is 
 $$
     \frac{1}{\varphi} \left(\begin{array}{ccc}
     \frac{(\mu'_1)^2}{\mathcal{V}(\mu_1)} & \ldots & 0 \\ \vdots & \ddots & \vdots \\ 0
     & \ldots & \frac{(\mu'_n)^2}{\mathcal{V}(\mu_n)} \end{array}\right)
+$$
+For the canonical link function 
+we have $\theta_i = \eta_i,$ hence $\theta'_i = 1,$ and the weights simplify to 
+$$
+    w_{ii} = \frac{\mu_i'}{\varphi} = \frac{\mathcal{V}(\mu_i)}{\varphi}.
 $$
 ]{.aside}
 ::: 
@@ -305,7 +315,7 @@ By the independence assumption the log-likelihood is
 $$
     \ell_{\mathbf{Y}} (\beta) = \sum_{i=1}^n \ell_{Y_i}(\eta_i)
 $$
-where $\eta_i = X_i^T \beta$. By the chain rule, 
+where $\eta_i = X_i^T \beta.$ By the chain rule, 
 $$ 
     \mathcal{U}(\beta) = \nabla_{\beta} \ell_{\mathbf{Y}} (\beta) =  \sum_{i=1}^n X_i U(\eta_i) 
     = \mathbf{X}^T U(\boldsymbol{\eta}).
@@ -322,22 +332,29 @@ $$
 $$
 ::: 
 
+The score equation is the equation 
+$$
+    \mathcal{U}(\beta) = 0,
+$$
+and if the maximum-likelihood estimator exists in $\mathbb{R}^p$ it solves this equation. 
+@thm-scorefisher shows that the score equation can be written as 
+$$
+    \mathbf{X}^T U(\boldsymbol{\eta}) =  \mathbf{X}^T U(\mathbf{X} \beta)  = 0.
+$$
 By observing that 
 $$
     U(\boldsymbol{\eta})_i = \frac{\theta'(\eta_i) ( Y_i - \mu_i)}{\varphi},
 $$
-it follows that the score equation $\mathcal{U}(\beta) = 0$ is equivalent to the system of equations
+it follows that the score equation is equivalent to the system of equations
 [We write $\theta'_i = \theta'(\eta_i)$ and use similar shorthand notation 
 for parameter functions throughout.]{.aside}
 $$
-    \sum_{i = 1}^n \theta'_i ( Y_i - \mu_i) X_{ij} = 0
+    \sum_{i = 1}^n \theta'_i ( Y_i - \mu_i) X_{ij} = 0, \qquad j = 1, \ldots, p.
 $$
-for $j = 1, \ldots, p$. Note that the score equation and thus its solution does not 
-depend upon the dispersion parameter. Note also, that for the canonical link function 
-we have $\theta_i = \eta_i$, hence $\theta'_i = 1$, and the weights simplify to 
-$$
-    w_{ii} = \frac{\mu_i'}{\varphi} = \frac{\mathcal{V}(\mu_i)}{\varphi}.
-$$
+Note that the score equation, and thus its solution, do not 
+depend upon the dispersion parameter. For the canonical link, 
+the equations simplify further as $\theta'_i = 1.$
+
 
 \index{link function!weights}
 
@@ -361,11 +378,13 @@ $$
     & = \frac{1}{2\varphi} \left( \|\mathbf{Y}\|^2  - \|\mathbf{Y} - \mathbf{X}\beta\|^2 \right).
     \end{align*}
 $$
-Up to the term $\|\mathbf{Y}\|^2$ -- that doesn't depend upon 
-the unknown $\beta$-vector -- the log-likelihood function is proportional to the squared error loss 
-with proportionality constant $- 1/(2 \varphi)$. The maximum likelihood estimator is thus equal to 
+Up to the term $\|\mathbf{Y}\|^2$---that doesn't depend upon 
+the unknown $\beta$-vector---the log-likelihood function is proportional to the squared error loss 
+with proportionality constant $- 1/(2 \varphi).$ The maximum likelihood estimator is thus equal to 
 the least squares estimator. 
 :::
+
+
 
 ### Algorithms
 
@@ -377,7 +396,8 @@ computing the first order Taylor approximation and solving the resulting linear
 equation. A slight modification of Newton's algorithm is often used, 
 where the derivative of the score is replaced by its expectation,
 that is, by the Fisher information. To present the idea we consider a simple example of 
-estimation in the exponential distribution with i.i.d. observations. 
+estimation in the exponential distribution with i.i.d. observations but with a 
+nonlinear and slightly non-standard parametrization of the mean.
 
 \index{Weibull distribution} \index{distribution!Weibull}
 
@@ -385,67 +405,123 @@ estimation in the exponential distribution with i.i.d. observations.
 Consider the parametrization $\theta(\eta) = - \eta^{-k}$ for $\eta > 0$ 
 (and a fixed $k > 0$) of the canonical parameter in the exponential distribution. [If $Z$ is 
 Weibull distributed with shape parameter $k$ and scale parameter $\eta$  
-then $Y = Z^k$ is exponentially distributed with scale parameter $\eta^k$. This explains the interest
-in this particular parametrization as it allows us to fit models with Weibull distributed responses.]{.aside} That is, 
+then $Y = Z^k$ is exponentially distributed with scale parameter $\eta^k.$ This explains the interest
+in this particular parametrization as it allows us to fit models with Weibull distributed outcomes.]{.aside} That is, 
 the density is 
 $$
     e^{\theta(\eta) y - k \log \eta}
 $$
-w.r.t. Lebesgue measure on $(0, \infty)$. The mean value function is 
+w.r.t. Lebesgue measure on $(0, \infty).$ The mean value function is 
 $$
     \mu(\eta) = -\frac{1}{\theta(\eta)} = \eta^k.
 $$
 With $Y_1, \ldots, Y_n$ i.i.d. observations from this distribution and with 
 $$
-    \bar{Y} = \frac{1}{n}\sum_{i=1}^n Y_i
+    S = \sum_{i=1}^n Y_i
 $$
 the score statistic amounts to 
 $$
-    U(\eta) = \sum_{i=1}^n \theta'(\eta) (Y_i - \mu(\eta)) =  n k  \eta^{-1}( \eta^{- k} \bar{Y} - 1)
+    U(\eta) = \sum_{i=1}^n \theta'(\eta) (Y_i - \mu(\eta)) =  k\eta^{- k-1} S - nk\eta^{-1},
 $$ 
-where we have used that $\theta'(\eta) = k \eta^{- k - 1}$. The score equation is thus equivalent to 
+where we have used that $\theta'(\eta) = k \eta^{- k - 1}.$ 
+
+We also find that 
 $$
-    \eta^{- k} \bar{Y} - 1 = 0.
+    U'(\eta) = nk\eta^{-2} - k(k+1)\eta^{- k-2} S. 
 $$
-It is straightforward to solve this equation analytically[^weibull], and the solution is 
+We get this expression directly from the explicit formula for $U$ above, but 
+it is instructive to see how it also follows from the general formula, 
+first derived in the proof of @lem-scorefisher, 
 $$
-    \eta = \bar{Y}^{1/k}.
+    \begin{align*}
+    U'(\eta) &= \theta''(\eta)(S - n\mu(\eta)) - n\theta'(\eta) \mu'(\eta) \\
+    & = - k (k + 1) \eta^{- k - 2} S + n k (k + 1) \eta^{-2} - n k^2 \eta^{- k - 1} \eta^{k -1} \\
+    & = n k \eta^{-2} - k (k + 1) \eta^{- k - 2} S 
+    \end{align*}
 $$
-However, to illustrate the general techniques we Taylor expand the left hand side of 
-the equation around $\eta_m$ to first order and obtain the linear equation 
+
+The score equation is the nonlinear equation $U(\eta) = 0.$ To illustrate the 
+general techniques for solving a nonlinear equation, we Taylor expand $U$ around 
+$\eta_m$ to first order to get 
 $$
-    \eta^{- k}_{m} \bar{Y} - 1 - k \eta_m^{-k-1} \bar{Y} (\eta - \eta_m) = 0.
+    U(\eta) \approx U(\eta_m) + U'(\eta_m)(\eta - \eta_m).
 $$
-The solution of this linear equation is 
+We then swap this approximation into the score equation and solve the
+resulting linear equation 
 $$
-    \eta_{m+1} = \eta_m  - \frac{\eta^{- k}_{m} \bar{Y} - 1}{- k \eta_m^{-k-1} \bar{Y}}  = \eta_m - \frac{U(\eta_m)}{U'(\eta_m)}
+U(\eta_m) + U'(\eta_m)(\eta - \eta_m) = 0.
 $$
-provided that $U'(\eta_m) \neq 0$. This is Newton's algorithm. With a suitable choice of 
+Provided that $U'(\eta_m) \neq 0,$ the solution is 
+$$
+    \begin{align*}
+    \eta_{m+1} &= \eta_m - \frac{U(\eta_m)}{U'(\eta_m)} \\
+    & = \eta_m - \frac{k\eta_m^{- k-1} S - nk\eta_m^{-1}}{n k \eta_m^{-2} - k (k + 1) \eta_m^{- k - 2} S } \\
+    & = \eta_m + \frac{\eta_m(\eta_m^{-k}S - n)}{(k+1)\eta_{m}^{-k}S - n}.
+    \end{align*}
+$$
+This is Newton's algorithm. With a suitable choice of 
 starting value $\eta_1$ we iteratively compute $\eta_{m}$ until convergence. 
 
-If we replace the derivative of the score statistic in the approximating linear equation
-by its expectation we arrive at the linear equation 
+Now by @lem-scorefisher, the Fisher information for $n$ independent observations equals 
 $$
-    \eta^{- k}_{m} \bar{Y} - 1 - k \eta_m^{-1} (\eta - \eta_m) = 0,
+    \mathcal{J}(\eta) = n \theta'(\eta) \mu'(\eta) = n k^2 \eta^{- 2}, 
 $$
-whose solution is 
+which is somewhat simpler than $U'(\eta).$ Swapping $\mathcal{J}(\eta_m)$ for 
+$U'(\eta_m)$ in Newton's algorithm gives the *Fisher scoring algorithm* 
 $$
-    \eta_{m+1} = \eta_m  - \frac{\eta^{- k}_{m} \bar{Y} - 1}{- k \eta_m^{-1}}  = \eta_m + \frac{U(\eta_m)}{\mathcal{J}(\eta_m)}.
+    \begin{align*}
+     \eta_{m+1} &= \eta_m + \frac{U(\eta_m)}{\mathcal{J}(\eta_m)} \\
+     & = \eta_m + \frac{k\eta_m^{- k-1} S - nk\eta_m^{-1}}{n k^2 \eta_m^{- 2}} \\
+     & = \eta_m + \frac{\eta_m(\eta_m^{-k}S - n)}{nk}.
+    \end{align*}
 $$
-The general technique of replacing the derivative of the score statistic with its expectation 
-in Newton's algorithm is known as Fisher scoring. 
+For the Fisher scoring algorithm we simply replace the denominator $(k+1)\eta^{-k}S - n$
+in the Newton algorithm by its expectation
+$$
+    \mathbf{E}((k+1)\eta^{-k}S - n) = 
+    (k + 1)\eta^{-k} n \eta^{k} - n = kn.
+$$
+In this simple example, the score equation is equivalent to 
+$$
+    \eta^{- k} S - n = 0,
+$$
+which is straightforward to solve analytically[^weibull]. The solution is 
+$$
+    \hat{\eta} = \left(\frac{1}{n} S \right)^{1/k},
+$$
+but the example illustrates the general iterative algorithms for solving the 
+nonlinear score equation.
 ::: 
 
 [^weibull]: Which shows that if $Z_1, \ldots, Z_n$ are i.i.d. Weibull distributed with known shape parameter $k$ and scale parameter $\eta$ the MLE of $\eta$ is $$\hat{\eta} = \left(\frac{1}{n} \sum_{i=1}^n Z_i^k\right)^{1/k}.$$
 
 \index{Newton's algorithm} \index{IWLS} \index{iterative weighted least squares algorithm}
 
-The iterative weighted least squares algorithm in the general case follows 
-the one-dimensional example above closely. 
-First note that the dispersion parameter enters as a multiplicative 
-constant in the log-likelihood, and its value does not affect the maximum likelihood estimate of $\beta$. We 
-take it to be equal to 1 for the subsequent computations. \index{Fisher information!observed}
-The derivative of minus the score statistic[^obs-fisher]
+The general Fisher scoring algorithm for solving the score equation follows 
+the one-dimensional example above closely. The Newton algorithm is based on 
+the first order Taylor approximation of the score function,
+$$
+    \mathcal{U}(\beta) \approx U(\beta_m) + D_\beta \mathcal{U}(\beta_m)(\beta - \beta_m),
+$$
+and equating this approximation equal to zero gives the update 
+$$
+    \beta_{m + 1} = \beta_m - D_\beta \mathcal{U}(\beta_m)^{-1}\mathcal{U}(\beta_m), 
+$$
+provided that the derivative is invertible. The Fisher scoring algorithm 
+is obtained by replacing the negative derivative by the Fisher information 
+matrix. That is, 
+$$
+    \beta_{m + 1} = \beta_m + \mathcal{J}(\beta_m)^{-1}\mathcal{U}(\beta_m).
+$$
+
+\index{Fisher information!observed}
+
+
+Since the dispersion parameter enters as a multiplicative 
+constant in the log-likelihood, its value does not affect the maximum likelihood 
+estimate of $\beta.$ We take it to be equal to $1$ for the subsequent computations. 
+
+The derivative of the negative score statistic[^obs-fisher]
 is found as in the proof of @thm-scorefisher to be 
 $$
     - D_{\beta} \mathcal{U}(\beta) = \mathbf{X}^T \mathbf{W}^{\text{obs}} \mathbf{X}
@@ -459,7 +535,7 @@ $$ {#eq-W-obs}
 
 [^obs-fisher]: Often called the observed Fisher information.
 
-A first order Taylor expansion of 
+The linearized score equation around $\beta_m$ can be written as 
 [ 
 $$
     \begin{array}{ll} 
@@ -467,21 +543,32 @@ $$
     \hskip 18mm - \theta'(\eta_i)\mu'(\eta_i). \end{array} 
 $$
 ]{.aside}
-the score statistic around $\beta_m$ results in the following linearization of the score equation
 $$ 
-    \mathbf{X}^T U(\boldsymbol{\eta}_m) - \mathbf{X}^T \mathbf{W}^{\text{obs}}_m \mathbf{X} (\beta - \beta_m) = 0.
+    \mathbf{X}^T U(\boldsymbol{\eta}_m) - \mathbf{X}^T \mathbf{W}^{\text{obs}}_m \mathbf{X} (\beta - \beta_m) = 0,
 $$ 
-Its solution is 
-[Note that $\mathbf{W}^{\text{obs}}_m$ as well as $\mathbf{W}_m$ depend upon the current $\beta_m$ through $\boldsymbol{\eta}_m = \mathbf{X}\beta_m,$ hence the subscript $m$.]{.aside}
+and its solution is 
+[Note that $\mathbf{W}^{\text{obs}}_m$ as well as $\mathbf{W}_m$ depend upon the current $\beta_m$ through $\boldsymbol{\eta}_m = \mathbf{X}\beta_m,$ hence the subscript $m.$]{.aside}
 $$
     \beta_{m+1} = \beta_m + (\mathbf{X}^T \mathbf{W}^{\text{obs}}_m \mathbf{X})^{-1}\mathbf{X}^T U(\boldsymbol{\eta}_m),
 $$
-provided that $\mathbf{X}^T \mathbf{W}^{\text{obs}}_m \mathbf{X}$ has full rank $p$. 
-Replacing $\mathbf{W}^{\text{obs}}_m$ by $\mathbf{W}_m$ from @thm-scorefisher
-we get the Fisher scoring algorithm. We may note that the diagonal entries in $\mathbf{W}_m$
+provided that $\mathbf{X}^T \mathbf{W}^{\text{obs}}_m \mathbf{X}$ has full rank $p.$ 
+@thm-scorefisher shows that 
+$$
+    \mathcal{J}(\beta_m) = \mathbf{X}^T \mathbf{W}_m \mathbf{X}, 
+$$
+where $\mathbf{W}_m$ is the diagonal weight matrix with diagonal entries 
+$$
+     w_{m,ii} = \frac{(\mu'_{m,i})^2}{\mathcal{V}(\mu_{m,i})} = 
+      \frac{(\mu'(X_i^T \beta_m))^2}{\mathcal{V}(\mu(X_i^T \beta_m))}.
+$$
+
+The Fisher scoring algorithm simply amounts to replacing 
+$\mathbf{W}^{\text{obs}}_m$ from the Newton algorithm by $\mathbf{W}_m.$
+
+We may note that the diagonal entries in $\mathbf{W}_m$
 are always strictly positive if the mean value function is strictly monotone, which implies that 
 $\mathbf{X}^T \mathbf{W}_m \mathbf{X}$ is positive definite and has rank $p$ 
-if and only if $\mathbf{X}$ has rank $p$. By contrast, the diagonal weights in 
+if and only if $\mathbf{X}$ has rank $p.$ By contrast, the diagonal weights in 
 $\mathbf{W}^{\text{obs}}_m$ may be negative. 
 
 \index{Fisher scoring algorithm}
@@ -497,15 +584,16 @@ $$
         U(\boldsymbol{\eta}_{m})}_{\mathbf{Z}_m}\Big).
     \end{align*}
 $$
-The vector $\mathbf{Z}_m$ is known as the *working response*, and
+The vector $\mathbf{Z}_m$ is known as the *working outcome*, and
 its coordinates can be written out as 
 $$
     Z_{m,i} =    X_i^T \beta_{m} + \frac{Y_i - \mu_{m, i}}{\mu'_{m,i}}.
 $$ {#eq-wr}
-In terms of the working response, the vector
+In terms of the working outcome, the vector
 $\beta_{m + 1}$ is the minimizer of the weighted squared error loss
 $$
-    (\mathbf{Z}_m- \mathbf{X}\beta)^T \mathbf{W}_m (\mathbf{Z}_m - \mathbf{X} \beta),
+    (\mathbf{Z}_m- \mathbf{X}\beta)^T \mathbf{W}_m (\mathbf{Z}_m - \mathbf{X} \beta)
+    = \|\mathbf{Z}_m- \mathbf{X}\beta \|_{\mathbf{W}_m}^2 , 
 $$ {#eq-weightss}
 see @thm-normal. The Fisher scoring algorithm for generalized linear models 
 is known as iterative weighted least squares (IWLS), since it can be understood as iteratively 
@@ -517,118 +605,131 @@ until convergence:
 in the IWLS algorithm. It doesn't mean that the dispersion parameter is irrelevant. It matters
 for the subsequent statistical analysis, but not for the estimation.]{.aside}
 
-1. Compute the working response vector $\mathbf{Z}_m$ based on $\beta_m$ using ([-@eq-wr]). 
+1. Compute the working outcome vector $\mathbf{Z}_m$ based on $\beta_m$ using ([-@eq-wr]). 
 2. Compute the weights 
     $$
         w_{m,ii} = \frac{(\mu'_{m,i})^2}{\mathcal{V}(\mu_{m,i})}.
     $$
 3. Compute $\beta_{m+1}$ by minimizing the weighted sum of squares ([-@eq-weightss]).
 
-It is noteworthy that the computations only rely on the mean value function $\mu$, its
-derivative $\mu'$ and the variance function $\mathcal{V}$. Thus the IWLS algorithm 
+It is noteworthy that the computations only rely on the mean value function $\mu,$ its
+derivative $\mu'$ and the variance function $\mathcal{V}.$ Thus the IWLS algorithm 
 depends on the mean and variance structure, as specified in the assumptions **GA1** and **GA2**,
-and not on any other aspects of the response distribution. 
+and not on any other aspects of the outcome distribution. 
 
 @exr-genIWLS explores how the IWLS algorithm can be derived 
-for general response distributions. From a general viewpoint of maximum-likelihood 
+for general outcome distributions. From a general viewpoint of maximum-likelihood 
 estimation in a regression model there is nothing special about the exponential 
 dispersion distributions. However, for the exponential dispersion distributions 
-the algorithm becomes -- as demonstrated above -- an algorithm that only depends on
+the algorithm becomes---as demonstrated above---an algorithm that only depends on
 the mean and variance structure of the model. 
 
 ## Sampling distributions {#sec-glm-sampling-distributions}
 
 It is not possible to derive exact distributional results about the 
 estimators or the various test statistics that are used for generalized linear 
-models -- except for the special case of the linear model with normal 
+models---except for the special case of the linear model with normal 
 errors. We will need to rely on approximations. By introducing an 
-idealized least squares estimator and reinterpreting the IWLS algorithm 
+oracle least squares estimator and reinterpreting the IWLS algorithm 
 in this context, it is possible to introduce sensible *approximate*
 moment results under the weak **GA1** and **GA2** assumptions. Approximate confidence
 intervals are subsequently introduced based on $Z$-scores, and tests of linear 
 hypotheses on $\beta$ under the **GA3** assumption are discussed using likelihood ratio (deviance) tests. 
-The operational procedures for using the tests are the same as for the linear model -- the only 
+The operational procedures for using the tests are the same as for the linear model---the only 
 difference being that the distributions used to compute $p$-values are 
 approximations. The formal asymptotic justifications will only be treated 
 briefly.
 
-### An idealized least squares estimator {#sec-ideal}
+### An oracle weighted least squares estimator {#sec-oracle}
 
-We introduce a weighted least squares estimator with weights and
-responses depending on the unknown parameters for which we can 
-derive exact moment results. We can then interpret 
-the IWLS algorithm as computing an approximate solution 
-to this idealized least squares problem. The derivation
-emphasizes the fact that the 
-algorithm only depends on the assumptions **GA1** and **GA2**.  
+We introduce in this section a so-called oracle weighted least squares estimator 
+with weights and outcomes depending on the unknown parameters. Even though we cannot 
+compute this estimator in practice,  we can 
+derive exact moment results for it, and we can interpret 
+the IWLS algorithm as computing an approximation. The oracle 
+estimator thus gives us an idea about the sampling properties of 
+the estimator computed by IWLS. Moreover, the oracle estimator 
+is a solution to an oracle weighted least squares problem, and 
+its derivation underscores the fact that the MLE for a generalized 
+linear model only draws on the model assumptions **GA1** and **GA2**.  
 
-Supposing that we know the true parameter, $\beta$, we can form the weighted quadratic loss 
+Pretending that we know the mean values $\mu_i = \mu(X_i^T \beta^0)$ of $Y_i$ 
+for $i = 1, \ldots n,$ we can form the weighted quadratic loss 
 $$
-    \tilde{\ell}(\tilde{\beta}) = \sum_{i=1}^n \mathcal{V}(\mu_i)^{-1} (Y_i - \mu(X_i^T \tilde{\beta}))^2
+    \mathrm{Loss}_0(\beta) \coloneqq \sum_{i=1}^n \mathcal{V}(\mu_i)^{-1} (Y_i - \mu(X_i^T \beta))^2.
 $$
-where $\mu_i = \mu(X_i^T \beta)$. Besides the fact that the weights depend upon 
-the unknown true parameter, the $\tilde{\beta}$ enters nonlinearly through $\mu(X_i^T \tilde{\beta})$. 
-We can Taylor expand the mean once[^step] around $\beta$ to obtain
+We refer to $\mathrm{Loss}_0$ as an *oracle* loss function 
+since it contains components that only an oracle would know---here 
+the values $\mu_i^0.$ Thus we cannot in practice compute or 
+minimize $\mathrm{Loss}_0$ to estimate $\beta^0.$
+
+Since the parameter $\beta$ enters nonlinearly in the mean 
+value above through $\mu(X_i^T \beta),$ we cannot compute 
+the minimizer of $\mathrm{Loss}_0$ analytically either. By
+a first order Taylor expansion[^step] around $\beta^0$ we get 
 $$
-    \mu(X_i \tilde{\beta}) \approx \mu_i + \mu_i'X_i^T (\tilde{\beta} - \beta)
+    \mu(X_i^T \beta) \approx \mu_i + \mu_i'X_i^T (\beta - \beta^0).
 $$
 
 [^step]: This is the key step in the Gauss-Newton algorithm for nonlinear least squares estimation. 
 
-and plug this approximation back into the loss. This yields the
-approximating quadratic loss
+
+Here $\mu_i' = \mu'(X_i^T \beta^0).$ Plugging this approximation into 
+the oracle loss yields the quadratic oracle loss
 $$
     \begin{align*}
-\tilde{\ell}(\tilde{\beta}) & = \sum_{i=1}^n \mathcal{V}(\mu_i)^{-1} \Big(Y_i - \mu_i - \mu_i'X_i^T (\tilde{\beta} - \beta)\Big)^2 \\
-& =\sum_{i=1}^n \frac{(\mu_i')^2}{\mathcal{V}(\mu_i)} \left(X_i^T \beta + \frac{Y_i - \mu_i}{\mu_i'} 
-- X_i^T \tilde{\beta}\right)^2.
+\mathrm{Loss}_1(\beta) & \coloneqq \sum_{i=1}^n \mathcal{V}(\mu_i)^{-1} \Big(Y_i - \mu_i - \mu_i'X_i^T (\beta - \beta^0)\Big)^2 \\
+& =\sum_{i=1}^n \frac{(\mu_i')^2}{\mathcal{V}(\mu_i)} \left(X_i^T \beta^0 + \frac{Y_i - \mu_i}{\mu_i'} 
+- X_i^T \beta\right)^2.
     \end{align*}
 $$
 
-By introducing the *idealized* responses 
+By introducing the *oracle* outcomes 
 $$ 
-    Z_i = X_i^T \beta + \frac{Y_i - \mu_i}{\mu_i'}
-$$ {#eq-idealresponse}
-and the idealized weights
+    Z_i \coloneqq X_i^T \beta^0 + \frac{Y_i - \mu_i}{\mu_i'}
+$$ {#eq-oracleoutcome}
+and the oracle weights
 $$
-    w_{ii} = \frac{(\mu_i')^2}{\mathcal{V}(\mu_i)},
+    w_{ii} \coloneqq \frac{(\mu_i')^2}{\mathcal{V}(\mu_i)} \geq 0,
 $$
-the approximating quadratic loss can be written as 
+the quadratic oracle loss can be written as 
 $$
-    \tilde{\ell}(\tilde{\beta}) = (\mathbf{Z} - \mathbf{X} \tilde{\beta})^T \mathbf{W} (\mathbf{Z} - \mathbf{X} \tilde{\beta}) = 
-    \|\mathbf{Z} - \mathbf{X} \tilde{\beta}\|^2_{\mathbf{W}},
+    \mathrm{Loss}_1(\beta) = (\mathbf{Z} - \mathbf{X} \beta)^T \mathbf{W} (\mathbf{Z} - \mathbf{X} \beta) = 
+    \|\mathbf{Z} - \mathbf{X} \beta\|^2_{\mathbf{W}},
 $$
-with $\mathbf{W}$ the diagonal weight matrix with the $w_{ii}$s in the diagonal.
-Under the assumptions **GA1** and **GA2** we can observe that
+with $\mathbf{W}$ the diagonal weight matrix with the $w_{ii}$-s in the diagonal.
+By @thm-normal, the oracle weighted least squares estimator---the minimizer of $\mathrm{Loss}_1(\beta)$---equals
 $$
-    \mathbf{E} (Z_i \mid X_i) = X_i^T \beta
+    \hat{\beta}^{\mathrm{oracle}} = (\mathbf{X}^T \mathbf{W} \mathbf{X})^{-1} \mathbf{X}^T \mathbf{W} \mathbf{Z}
+$$
+whenever $\mathbf{X}^T \mathbf{W} \mathbf{X}$ has full rank. 
+
+Under the assumptions **GA1** and **GA2** we find that 
+$$
+    \mathbf{E} (Z_i \mid X_i) = X_i^T \beta^0
 $$
 and 
 $$
-    \mathbf{V} (Z_i \mid X_i) = \varphi w_{ii}^{-1},
-$$
-but since the weights as well as $\mathbf{Z}$ depend upon the unknown $\beta$, we cannot compute
-$\tilde{\ell}(\tilde{\beta})$. The IWLS algorithm can be understood as iteratively approximating 
-the idealized response by the working response -- by plugging in the current estimate of
-$\beta$. In this way we get approximations of the idealized loss, and the idealized 
-weighted least squares estimator 
-$$
-    \hat{\beta}^{\mathrm{ideal}} = (\mathbf{X}^T \mathbf{W} \mathbf{X})^{-1} \mathbf{X}^T \mathbf{W} \mathbf{Z}.
+    \mathbf{V} (Z_i \mid X_i) = \varphi w_{ii}^{-1}.
 $$
 
-It is worth observing that under **GA1**, **GA2** and A4 we have the following exact distributional 
-results on $\hat{\beta}^{\mathrm{ideal}}$
+If A4 additionally holds, we have the following exact distributional results about
+$\hat{\beta}^{\mathrm{oracle}}$:
 $$
    \begin{align*}
-   \mathbf{E}(\hat{\beta}^{\mathrm{ideal}} \mid \mathbf{X}) & = \beta, \\
-    \mathbf{V}(\hat{\beta}^{\mathrm{ideal}} \mid \mathbf{X}) & = \varphi (\mathbf{X}^T \mathbf{W} \mathbf{X})^{-1}, \\
-    \mathbf{E}(\|\mathbf{Z} - \mathbf{X} \hat{\beta}^{\mathrm{ideal}}\|^2_{\mathbf{W}} \mid \mathbf{X}) & = (n-p) \varphi.
+   \mathbf{E}(\hat{\beta}^{\mathrm{oracle}} \mid \mathbf{X}) & = \beta^0, \\
+    \mathbf{V}(\hat{\beta}^{\mathrm{oracle}} \mid \mathbf{X}) & = \varphi (\mathbf{X}^T \mathbf{W} \mathbf{X})^{-1}, \\
+    \mathbf{E}(\|\mathbf{Z} - \mathbf{X} \hat{\beta}^{\mathrm{oracle}}\|^2_{\mathbf{W}} \mid \mathbf{X}) & = (n-p) \varphi.
    \end{align*}
 $$
 
-If we plug the maximum likelihood estimator, 
-$\hat{\beta}$, in for $\beta$ in the definition of the 
-idealized quadratic loss, and thus replacing the idealized responses by
+Since the weights as well as $\mathbf{Z}$ depend upon the unknown $\beta^0,$ 
+we cannot compute $\mathrm{Loss}(\beta),$ but the IWLS algorithm can be 
+seen as iteratively approximating the oracle estimator---by 
+plugging in the current estimate of $\beta^0$ in the computation of
+weights and the working outcomes. If we ultimately plug in 
+the maximum likelihood estimator, $\hat{\beta},$ in for $\beta^0$ 
+in the definition of the oracle quadratic loss, and thus replacing the oracle outcomes by
 $$
     \hat{Z}_i = X_i^T \hat{\beta} + \frac{Y_i - \hat{\mu}_i}{\hat{\mu}_i'}
 $$ 
@@ -637,15 +738,15 @@ $$
     \beta \mapsto \|\hat{\mathbf{Z}} - \mathbf{X} \beta\|^2_{\hat{\mathbf{W}}}.
 $$ {#eq-iwlslimit}
 
-[In reality, $\hat{\beta}$ is $\beta_m$, the value of 
-$\beta$ in the $m$-th iteration of IWLS, when the algorithm is judged to have converged.]{.aside}
+[In reality, $\hat{\beta}$ is $\beta_m,$ the value in the $m$-th iteration of IWLS, when the algorithm is judged to have converged.]{.aside}
 
 The fact that $\hat{\beta}$ 
 is a fixed point for the IWLS algorithm implies that $\hat{\beta}$ is also the minimizer 
-of ([-@eq-iwlslimit]). Provided that ([-@eq-iwlslimit]) is a good approximation of the idealized 
-quadratic loss, we can expect that the distributional results on the idealized 
-estimator will be good approximations for $\hat{\beta}$ as well. Observe 
-that with
+of ([-@eq-iwlslimit]). Provided that ([-@eq-iwlslimit]) is a good approximation of the oracle 
+quadratic loss, we can expect that the distributional results on the oracle 
+estimator will be good approximations for $\hat{\beta}$ as well. 
+
+Finally, we observe that with
 $$
     \mathcal{X}^2 \coloneqq \|\hat{\mathbf{Z}} - \mathbf{X} \hat{\beta}\|^2_{\hat{\mathbf{W}}} = 
     \sum_{i=1}^n \frac{(Y_i - \hat{\mu}_i)^2}{\mathcal{V}(\hat{\mu}_i)},
@@ -655,25 +756,26 @@ the  results above suggest the estimator \index{dispersion parameter!estimator}
 $$
     \hat{\varphi} = \frac{1}{n-p} \mathcal{X}^2
 $$ {#eq-psiest}
-of the dispersion parameter. 
+of the dispersion parameter. This is the standard estimator of the dispersion 
+parameter that we will use throughout. 
 
 ### Tests and confidence intervals {#sec-glm-test-conf}
 
-The distributional results for the idealized weighted least squares estimator suggest
+The distributional results for the oracle weighted least squares estimator suggest
 the approximation 
 $$\sqrt{\varphi (\mathbf{X}^T \mathbf{W} \mathbf{X})^{-1}_{jj}}$$
-of the standard error \index{standard error} of $\hat{\beta}_j$. By plugging in the estimate 
-of the dispersion parameter and the estimate of the weights we define the $j$-th 
+of the standard error \index{standard error} of $\hat{\beta}_j.$ By plugging in the estimate 
+of the dispersion parameter and the estimate of the weights, we define the $j$-th 
 $Z$-score as \index{$Z$-score!generalized linear model}
 $$Z_j \coloneqq \frac{\hat{\beta}_j - \beta_j}{\sqrt{\hat{\varphi} (\mathbf{X}^T \hat{\mathbf{W}} \mathbf{X})^{-1}_{jj}}}.$$
 More generally, we can introduce 
 $$Z_a \coloneqq \frac{a^T \hat{\beta} - a^T \beta}{\sqrt{\hat{\varphi} a^T (\mathbf{X}^T \hat{\mathbf{W}} \mathbf{X})^{-1}a}}$$
-for $a \in \mathbb{R}^p$.
+for $a \in \mathbb{R}^p.$
 
 The $Z$-score is used exactly as it is used for linear models. 
 First, it is used to test a one-dimensional restriction on 
-the parameter vector -- typically a hypothesis of the form $H_0 : \beta_j = 0$ for some index $j$. 
-The square of a $Z$-statistic, $Z_a^2$, is known as a univariate Wald statistic. \index{Wald statistic!generalized linear model}
+the parameter vector---typically a hypothesis of the form $H_0 : \beta_j = 0$ for some index $j.$ 
+The square of a $Z$-statistic, $Z_a^2,$ is known as a univariate Wald statistic. \index{Wald statistic!generalized linear model}
 It is possible to construct multivariate 
 Wald statistics to test hypotheses about multivariate parameter constraints, but we will not pursue
 the construction here. Second, the $Z$-score is used to compute confidence 
@@ -687,20 +789,21 @@ where $z$ is chosen suitably.
 A distributional approximation of $Z_a$ is needed for computing either a $p$-value
 associated with a hypothesis test or for choosing the quantile $z$ in the 
 construction of the confidence interval. Asymptotic 
-theory supports using the $\mathcal{N}(0, 1)$-approximation, so if a confidence 
-interval with 95% nominal coverage is sought, and $z = 1.96$ is chosen as the 97.5% quantile for 
+theory supports using the $\mathcal{N}(0, 1)$-approximation.
+If we aim for a confidence interval with 95% nominal coverage, 
+we choose $z = 1.96$ as the 97.5% quantile for 
 the standard normal distribution. The actual coverage depends upon how well the 
-distribution of $Z_a$ is approximated by $\mathcal{N}(0, 1)$. 
+distribution of $Z_a$ is approximated by $\mathcal{N}(0, 1).$ 
 
 An alternative to using theoretical approximations is to 
 use bootstrapping to compute approximating quantiles, see @sec-bootstrap. 
 Occasionally, $z$ is chosen as the 97.5% quantile in the 
-$t_{n-p}$-distribution instead -- still aiming for a 95% coverage. 
+$t_{n-p}$-distribution instead---still aiming for a 95% coverage. 
 The theoretical support for this practice is weak, but the practical consequence is clear. 
 Since the tail quantiles for the $t$-distribution are larger than the tail 
 quantiles for the normal distribution, the use of the $t$-distribution 
 results in wider confidence intervals and more conservative conclusions. The 
-difference is, however, negligible unless $n-p$ is small -- less than 20, say. 
+difference is, however, negligible unless $n-p$ is small---less than 20, say. 
 
 
 \index{likelihood ratio test}
@@ -708,25 +811,25 @@ difference is, however, negligible unless $n-p$ is small -- less than 20, say.
 The likelihood ratio tests are alternatives to
 $z$-tests and Wald tests. Their derivation is based on 
 the stronger distributional assumption **GA3**. That is, 
-the responses follow an exponential dispersion distribution conditionally on the predictors. 
+the outcomes follow an exponential dispersion distribution conditionally on the predictors. 
 In the framework of generalized linear models the likelihood ratio tests are 
 usually formulated in terms of *deviances* as introduced in @sec-deviance.
 
-For a generalized linear model we have response observations $Y_1, \ldots, Y_n$, and we let 
-$\hat{\mu}_i$ denote the maximum likelihood estimate of the mean of $Y_i$. 
+For a generalized linear model we have outcome observations $Y_1, \ldots, Y_n,$ and we let 
+$\hat{\mu}_i$ denote the maximum likelihood estimate of the mean of $Y_i.$ 
 That is, 
 $$
     \hat{\mu}_i = \mu(X_i^T \hat{\beta})
 $$
-with $\hat{\beta}$ the maximum likelihood estimate of $\beta \in\mathbb{R}^p$. 
+with $\hat{\beta}$ the maximum likelihood estimate of $\beta \in\mathbb{R}^p.$ 
 Likewise, if $\hat{\beta}^0$ denotes the maximum likelihood estimate of 
 $\beta$ under the null hypothesis
 $$
-    H_0: \beta \in L
+    H_0: \beta \in L,
 $$
-where $L \subseteq \mathbb{R}^p$ is a $p_0$ dimensional subspace of $\mathbb{R}^p$, we let 
+where $L \subseteq \mathbb{R}^p$ is a $p_0$ dimensional subspace of $\mathbb{R}^p,$ we let 
 $\hat{\mu}_i^0$ denote the corresponding maximum likelihood estimate of the mean for the $i$-th observation
-under the hypothesis. Recall that all such hypotheses can be rephrased in terms of a $p \times p_0$ matrix
+under the hypothesis. Recall that according to @eq-subspace, all such hypotheses can be rephrased in terms of a $p \times p_0$ matrix
 $\mathbf{C}$ of rank $p_0$ such that
 $$
     H_0 : \mathbf{E}(Y_i \mid X_i) =  \mu(X_i^T \mathbf{C} \beta^0).
@@ -770,19 +873,19 @@ generally good when $\varphi$ is small.
 
 A formal justification of the approximations is quite involved, and the typical 
 strategy is to consider asymptotic scenarios with $n \to \infty$ combined with suitable 
-conditions on the predictors $X_i$. We will explain the basis for these 
+conditions on the predictors $X_i.$ We will explain the basis for these 
 approximations later, but we will not consider formal asymptotic arguments. 
 
 ## Model assessment and diagnostic {#sec-glm-assessment}
 
 The definition of the adjusted $R^2$ can easily be extended to
 generalized linear models by replacing $\mathrm{RSS}/(n-p)$ 
-with $\mathcal{X}^2/(n-p)$, where 
+with $\mathcal{X}^2/(n-p),$ where 
 $$
     \mathcal{X}^2 = \sum_{i=1}^n \frac{(Y_i - \hat{\mu}_i)^2}{\mathcal{V}(\hat{\mu}_i)}
 $$
 is the Pearson $\chi^2$-statistic, \index{Pearson $\chi^2$-statistic}
-or by $D/(n-p)$, where $$D = \sum_{i=1}^n d(Y_i, \hat{\mu}_i)$$
+or by $D/(n-p),$ where $$D = \sum_{i=1}^n d(Y_i, \hat{\mu}_i)$$
 is the total deviance. \index{deviance!total}
 
 As for the linear model, model diagnostics can be based on residuals, but 
@@ -792,7 +895,7 @@ the $i$-th *raw residual* is \index{residual!raw}
 $$
     Y_i - \hat{\mu}_i.
 $$
-In the R terminology the raw residual is called the *response residual*. \index{residual!response}
+In the R terminology the raw residual is called the *outcome residual*. \index{residual!outcome}
 
 [The sum of the squared Pearson residuals is the Pearson $\chi^2$-statistic.]{.aside}
 Whenever the variance function is not constant, the raw residual is not particularly useful. 
@@ -803,7 +906,7 @@ $$
 $$
 Pearson residuals are used in the same way as the raw or standardized residuals are
 used for the linear model. We plot the Pearson residuals against the fitted values or 
-a predictor variable to visually check the model assumptions -- the residuals should 
+a predictor variable to visually check the model assumptions---the residuals should 
 show no distributional dependence upon what we plot it against. Systematic trends 
 show that **GA1** is not fulfilled, and variance inhomogeneity shows that the variance 
 function in **GA2** is not appropriate.
@@ -846,18 +949,18 @@ $$
 The distribution of the residual is difficult to characterize 
 in general. We cannot expect that the Pearson residuals 
 follow a normal distribution, say. For generalized linear models there is 
-thus no simple way to check if the strong distributional assumptions -- 
-that the responses follow an exponential dispersion distribution given 
-the predictors -- are fulfilled, and the residuals are  
+thus no simple way to check if the strong distributional assumption---
+that the outcomes follow an exponential dispersion distribution given 
+the predictors---are fulfilled, and the residuals are
 primarily used to investigate the mean-variance structure. 
 
-If the responses have a continuous distribution with distribution function 
+If the outcomes have a continuous distribution with distribution function 
 $F_{\mu_i, \varphi}$ we can, however, construct a pp-plot \index{pp-plot} by comparing 
 $$
     F_{\hat{\mu}_i, \hat{\varphi}}(Y_i)
 $$
 to the quantiles of the uniform distribution. This can be useful for 
-gamma distributed responses but not for Poisson distributed reponses, say, unless 
+gamma distributed outcomes but not for Poisson distributed reponses, say, unless 
 the counts are quite large.
 
 
@@ -868,7 +971,7 @@ Define the probability distribution on $\{0,1, \ldots, m\}$ by the probability m
 $$
     p_{\eta}(k) = \frac{1}{c(\eta)}\eta^k
 $$
-with $c(\eta) = \sum_{k=0}^m \eta^k$ for $\eta > 0$. 
+with $c(\eta) = \sum_{k=0}^m \eta^k$ for $\eta > 0.$ 
 
 1. Show that the family of probability distributions given
     by $p_{\eta}$ for $\eta > 0$ is an exponential
@@ -879,8 +982,8 @@ with $c(\eta) = \sum_{k=0}^m \eta^k$ for $\eta > 0$.
         \mathcal{V}(\mu(\eta)) = \frac{\eta}{(1-\eta)^2} - \frac{(m+1)^2
         \eta^{m+1}}{(1-\eta^{m+1})^2}
     $$ 
-    for $\eta \neq 1$. Plot the link function for $m = 5$,
-    $10$, $20$.
+    for $\eta \neq 1.$ Plot the link function for $m = 5,$
+    $10,$ $20.$
 
     **Hint:** *You can plot the link function without a closed form expression.*
 
@@ -892,14 +995,14 @@ $n=10$ observations.
 | $X_i$ | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1.0 | 1.1 | 1.2 |
 | $Y_i$ | 1   | 5   | 2   | 8   | 7   | 5   | 9   | 7   | 10  | 10  |
 
-Consider the generalized linear model with response distribution as
+Consider the generalized linear model with outcome distribution as
 given above, with the linear predictor 
 $$
     \eta_i = \beta_0 + \beta_1 x_i.
 $$
 
 3. Implement the Fisher scoring algorithm to estimate
-     $\beta_0$ and $\beta_1$. Use as initial values $\beta_0 = 0$ and
+     $\beta_0$ and $\beta_1.$ Use as initial values $\beta_0 = 0$ and
     $\beta_1 = 1$ and report the
     estimated parameters for each iteration of the algorithm with a
     total of 10 iterations. Compute also an estimate of the standard error of
@@ -916,17 +1019,17 @@ $$
 
 ::: {#exr-neg-binomial}
 
-Define a probability distribution on the non-negative integers, $0, 1, 2, \ldots$, as having probability mass function 
+Define a probability distribution on the non-negative integers, $0, 1, 2, \ldots,$ as having probability mass function 
 $$
     p_{\eta}(k) = G(k, \rho) \left(\frac{1}{\rho+\eta}\right)^{\rho} \left(\frac{\eta}{\rho + \eta}\right)^k
 $$ {#eq-negbinom}
-for $\eta, \rho > 0$. The explicit expression for $G(k, \rho)$ is not needed -- only that
-$\sum_{k=0}^{\infty} p_{\eta}(k) = 1$. In the following, $\rho$ is considered a fixed nuisance parameter.
+for $\eta, \rho > 0.$ The explicit expression for $G(k, \rho)$ is not needed---only that
+$\sum_{k=0}^{\infty} p_{\eta}(k) = 1.$ In the following, $\rho$ is considered a fixed nuisance parameter.
 [For the curious, the distribution is the negative binomial distribution.]{.aside}
 
 1. Show that the family of probability distributions given
     by $p_{\eta}$ for $\eta > 0$ is an exponential
-    family for any fixed $\rho > 0$. Find the structure measure and the unit cumulant function. 
+    family for any fixed $\rho > 0.$ Find the structure measure and the unit cumulant function. 
 
 2. Show that the mean value function is $\mu(\eta) = \eta$ and that 
     $$
@@ -943,14 +1046,14 @@ $n=10$ observations.
 | $Y_i$ | 6   | 11  | 16  | 38  | 82  | 22  | 108 | 61  | 55  | 64  |
 
 
-Consider the generalized linear model with response distribution as
+Consider the generalized linear model with outcome distribution as
 given above and with the linear predictor 
 $$
     \eta_i = \beta_0 + \beta_1 X_i.
 $$
 
 3. Take $\rho = 1$ and compute the MLE of $\beta_0$ and
-    $\beta_1$. You can use the Fisher-scoring algorithm. How will it
+    $\beta_1.$ You can use the Fisher-scoring algorithm. How will it
     affect the result if $\rho$ is changed?
 
 4. Still taking $\rho = 1$ compute and plot the Pearson
@@ -961,33 +1064,33 @@ $$
     $\chi^2$-statistic as a function of $\rho$ using the general
     variance formula. Plot this
     $\chi^2$-statistic as a function of $\rho$ and use it to argue that
-    the data suggests a value of $\rho = 4$.
+    the data suggests a value of $\rho = 4.$
 
 6. Compute a nominal 95\% confidence interval of $\beta_1$
-    based on the MLE when assuming $\rho = 1$. Then compute a nominal 95\%
+    based on the MLE when assuming $\rho = 1.$ Then compute a nominal 95\%
     confidence interval assuming that $\rho = 4$ is the true value of $\rho$
-    while the MLE is still based on assuming $\rho = 1$. Comment on the result. 
+    while the MLE is still based on assuming $\rho = 1.$ Comment on the result. 
 
 :::
 
 ::: {#exr-lognormal}
-Recall from @exm-log-normal that for the log-normal random variable, $Y$, 
+Recall from @exm-log-normal that for the log-normal random variable, $Y,$ 
 whose distribution is given as 
 $$
 \log(Y) = \eta + \varepsilon
 $$ {#eq-lognormal}
-for $\eta \in \mathbb{R}$ the linear predictor and $\varepsilon \sim \mathcal{N}(0,\sigma^2)$, **GA1** holds with mean
+for $\eta \in \mathbb{R}$ the linear predictor and $\varepsilon \sim \mathcal{N}(0,\sigma^2),$ **GA1** holds with mean
   value function 
 $$
     \mu(\eta) =e^{\eta + \frac{\sigma^2}{2}}
 $$ 
-and **GA2** holds with variance function $\mathcal{V}(\mu) = \mu^2$. The dispersion parameter is given as 
+and **GA2** holds with variance function $\mathcal{V}(\mu) = \mu^2.$ The dispersion parameter is given as 
 $$
     \varphi = e^{\sigma^2} - 1
 $$
-in terms of $\sigma^2$.
+in terms of $\sigma^2.$
 
-Introduce the parameter $\tilde{\eta} = \eta + \frac{\sigma^2}{2}$. Whenever the linear
+Introduce the parameter $\tilde{\eta} = \eta + \frac{\sigma^2}{2}.$ Whenever the linear
 predictor includes an intercept, the term $\frac{\sigma^2}{2}$ is
 simply absorbed into the intercept parameter, and we can regard
 $\tilde{\eta}$ as the linear predictor with this reparametrization of the
@@ -995,16 +1098,16 @@ intercept.
 
 1. Identify the exponential dispersion
       model with mean value function $\mu(\tilde{\eta}) = e^{\tilde{\eta}}$ and variance
-      function $\mathcal{V}(\mu) = \mu^2$. Show
+      function $\mathcal{V}(\mu) = \mu^2.$ Show
     that the unit deviance for this model is
     $$
         d(y, \mu) = 2 \left(\log\left(\frac{\mu}{y} \right) + \frac{y}{\mu} - 1\right).$$  
 
 
 In general, the *coefficient of variation* \index{coefficient of variation} of $Y$ is defined as 
-$\sqrt{\mathbf{V}(Y)}/\mu$. For the log-normal model as well as the exponential dispersion
+$\sqrt{\mathbf{V}(Y)}/\mu.$ For the log-normal model as well as the exponential dispersion
 model above, this coefficient is constantly equal to $\sqrt{\varphi}$ and
-independent of $\mu$. Both models are thus models using a log-link function and 
+independent of $\mu.$ Both models are thus models using a log-link function and 
 with a constant coefficient of variation.
 
 Deviations in the model given by ([-@eq-lognormal]) are naturally measured in terms
@@ -1013,7 +1116,7 @@ for the normal distribution, and the model is typically fitted on this log-scale
 The exponential dispersion model is typically fitted using the IWLS algorithm.
 
 2. First fix $y = 1$ and plot $\tilde{\eta} \mapsto d(1, e^{\tilde{\eta}})$ for
-    $\tilde{\eta} \in (-2, 2)$. Compare with $\tilde{\eta} \mapsto \tilde{\eta}^2$. 
+    $\tilde{\eta} \in (-2, 2).$ Compare with $\tilde{\eta} \mapsto \tilde{\eta}^2.$ 
     Then show that in general 
     $$
         d(y, e^{\tilde{\eta}}) = (\log(Y) - \tilde{\eta})^2 + o((\log(y)  -\tilde{\eta})^2).
@@ -1025,7 +1128,7 @@ The exponential dispersion model is typically fitted using the IWLS algorithm.
 ::: {#exr-fire}
 This exercise is on the Danish fire insurance data introduced in 
 @sec-linear. You should remove claims larger that 10 millions 
-to avoid numerical problems. Recall that the response variable $Y$ is 
+to avoid numerical problems. Recall that the outcome variable $Y$ is 
 the claim size and there are two potential predictors in the data set.
 
 1. Refit the linear, additive model
@@ -1037,10 +1140,10 @@ the claim size and there are two potential predictors in the data set.
 As shown in @exm-log-normal, and further elaborated on in @exr-lognormal, the log-normal regression model is also 
 a generalized linear model with a log-link and a quadratic variance function. That is, 
 $$
-    \log \mathbf{E} (Y_i)  = \tilde{\beta}_0 + \beta_{X_{i,\texttt{grp}}} +  \beta_{\texttt{sum}} \log X_{i, \texttt{sum}}.
+    \log \mathbf{E} (Y_i)  = \beta_0 + \beta_{X_{i,\texttt{grp}}} +  \beta_{\texttt{sum}} \log X_{i, \texttt{sum}}.
 $$ {#eq-glm}
 
-2. Show that with a log-link and a quadratic variance function, $\mathcal{V}(\mu) = \mu^2$, 
+2. Show that with a log-link and a quadratic variance function, $\mathcal{V}(\mu) = \mu^2,$ 
     the weights in the IWLS algorithm are always 1. 
 
 3. Fit the model given by ([-@eq-glm]). Investigate if the
@@ -1049,14 +1152,14 @@ $$ {#eq-glm}
 
 An alternative to the log-normal model is the log-gamma model, 
 where ([-@eq-lognormalex]) still specifies the mean value, but where
-the log-response is assumed to have a gamma distribution. Such a model 
-can be fitted as a generalized linear model with a gamma response,
+the log-outcome is assumed to have a gamma distribution. Such a model 
+can be fitted as a generalized linear model with a gamma outcome,
 but with the identity link.
 
 4. Fit the log-gamma model and discuss the model fit. 
 
 5. Construct pp-plots for both the log-normal and log-gamma 
-    model and discuss which response distribution appears most
+    model and discuss which outcome distribution appears most
     appropriate. 
 :::
 
@@ -1064,7 +1167,7 @@ but with the identity link.
 
 ::: {#exr-genIWLS} 
 Assume in this exercise that $Y_i \mid X_i$ has
-distribution with density $f_i(y_i, \eta_i)$ for $i = 1, \ldots, n$, 
+distribution with density $f_i(y_i, \eta_i)$ for $i = 1, \ldots, n,$ 
 where $\eta_i = X_i^T \beta$ is the linear predictor. The generalized 
 linear model with an exponential dispersion distribution is a special 
 case with 
@@ -1073,7 +1176,7 @@ $$
 $$
 The purpose of the exercise is to investigate the computations of the maximum-likelihood estimator
 in this more general setup, and to understand which results are specific 
-to exponential dispersion models. It is assumed that $f_i(y_i, \eta_i) > 0$, 
+to exponential dispersion models. It is assumed that $f_i(y_i, \eta_i) > 0,$ 
 and we define 
 $$
     U_i(\eta_i) = (\log f_i(Y_i, \eta_i))'
@@ -1082,9 +1185,9 @@ and
 $$
     w_i = -\mathbf{E} \left( (\log f_i(Y_i, \eta_i))'' \right)
 $$
-where the differentiation is w.r.t. $\eta_i$. Introduce 
+where the differentiation is w.r.t. $\eta_i.$ Introduce 
 also the score vector $U(\boldsymbol{\eta}) = (U_1(\eta_1), \ldots, U_n(\eta_n))^T$ and the diagonal matrix 
-$\mathbf{W}$ with $\mathbf{W}_{ii} = w_i$.
+$\mathbf{W}$ with $\mathbf{W}_{ii} = w_i.$
 
 1. Prove that the score statistic equals $\mathbf{X}^TU(\boldsymbol{\eta})$ and 
     that the Fisher information equals $\mathbf{X}^T \mathbf{W} \mathbf{X}.$
@@ -1092,13 +1195,13 @@ $\mathbf{W}$ with $\mathbf{W}_{ii} = w_i$.
 2. Prove that the $m$-th Fisher scoring step for solving the score equation
     amounts to solving the linear equation 
     $$
-        \mathbf{X}U(\boldsymbol{\eta}_m) - (\mathbf{X}^T \mathbf{W}_m \mathbf{X}) (\beta - \beta_m) = 0.
+        \mathbf{X}^TU(\boldsymbol{\eta}_m) - (\mathbf{X}^T \mathbf{W}_m \mathbf{X}) (\beta - \beta_m) = 0.
     $$
-    Here $\mathbf{W}_m$ is defined in terms of $\boldsymbol{\eta}_m = \mathbf{X} \beta_m$.
+    Here $\mathbf{W}_m$ is defined in terms of $\boldsymbol{\eta}_m = \mathbf{X} \beta_m.$
 
-4. Show that if $w_{m, i} \geq 0$ then $\beta_{m + 1}$ is the solution
+3. Show that if $w_{m, i} \geq 0$ then $\beta_{m + 1}$ is the solution
     of a weighted least squares problem with diagonal weight matrix $\mathbf{W}_m$
-    and working responses $X_i^T \beta_m + U_i(\eta_m) / w_{m,i}.$
+    and working outcomes $X_i^T \beta_m + U_i(\eta_m) / w_{m,i}.$
 
 Since $w_i$ is the variance of the score statistic (and thus nonnegative) under 
 some regularity conditions, estimation can be carried out by 
