@@ -1305,14 +1305,14 @@ It is possible to justify a generalization of @eq-in-sample-est to
 generalized linear models when the estimator is the MLE and the link 
 function is canonical.
 
-::: {#exm-ideal}
-Assume that $\hat{\mu}_i = \mu(X^T_i \hat{\beta}^{\mathrm{ideal}})$ with 
-$\hat{\beta}^{\mathrm{ideal}}$ the idealized least squares estimator introduced in @sec-ideal,
+::: {#exm-oracle}
+Assume that $\hat{\mu}_i = \mu(X^T_i \hat{\beta}^{\mathrm{oracle}})$ with 
+$\hat{\beta}^{\mathrm{oracle}}$ the oracle weighted least squares estimator introduced in @sec-oracle,
 and the $\mu = g^{-1}$ is the inverse of the canonical link $g$. Then $g(\hat{\mu}_i) = (\mathbf{S} \mathbf{Z})_i$ for 
 $$
     \mathbf{S} = \mathbf{X} (\mathbf{X}^T \mathbf{W} \mathbf{X})^{-1} \mathbf{X}^T \mathbf{W}.
 $$
-Under the distributional assumptions GA2 and A4, $Z_i$ is conditionally uncorrelated with $Y_j$ for $i \neq j$ and 
+Under the distributional assumptions **GA2** and **A4**, $Z_i$ is conditionally uncorrelated with $Y_j$ for $i \neq j$ and 
 $$
     \mathrm{cov}(Z_i, Y_i \mid \mathbf{X}) = \frac{\varphi \mathcal{V}(\mu_i)}{\mu_i'} = \varphi,
 $$
