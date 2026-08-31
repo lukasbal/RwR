@@ -295,14 +295,14 @@
     "RwR": {
       "Package": "RwR",
       "Version": "0.3.7",
-      "Source": "Local",
+      "Source": "GitHub",
       "Type": "Package",
       "Title": "Regression with R",
       "Date": "2025-09-28",
       "Authors@R": "person(\"Niels Richard\", \"Hansen\", email = \"Niels.R.Hansen@math.ku.dk\", role = c(\"aut\", \"cre\"))",
       "Description": "Data sets and case studies from the book \"Regression with R\". The case studies are included as vignettes.",
       "Depends": [
-        "R (>= 3.2.0)"
+        "R (>= 3.5.0)"
       ],
       "Suggests": [
         "knitr",
@@ -323,8 +323,13 @@
       "NeedsCompilation": "no",
       "Author": "Niels Richard Hansen [aut, cre]",
       "Maintainer": "Niels Richard Hansen <Niels.R.Hansen@math.ku.dk>",
-      "RemoteType": "local",
-      "RemoteUrl": "./RwR_package"
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "RwR",
+      "RemoteUsername": "nielsrhansen",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "f07bd87f5103147f2c8447f4dae61c0bd05ca95d",
+      "RemoteSubdir": "RwR_package"
     },
     "S7": {
       "Package": "S7",
